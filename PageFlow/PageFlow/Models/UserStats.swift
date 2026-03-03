@@ -10,6 +10,8 @@ final class UserStats {
     var lastSessionDate: Date?
     var streakFreezesUsedThisMonth: Int
     var streakFreezeMonthMarker: Int
+    var needsSync: Bool
+    var supabaseUserId: String?
 
     var currentLevel: ReaderLevel {
         ReaderLevel.level(for: totalXP)
@@ -34,5 +36,6 @@ final class UserStats {
         self.longestStreak = 0
         self.streakFreezesUsedThisMonth = 0
         self.streakFreezeMonthMarker = Calendar.current.component(.month, from: Date())
+        self.needsSync = true
     }
 }

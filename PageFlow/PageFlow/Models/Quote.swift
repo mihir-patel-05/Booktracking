@@ -8,6 +8,8 @@ final class Quote {
     var session: ReadingSession?
     var text: String
     var dateCreated: Date
+    var needsSync: Bool
+    var supabaseUserId: String?
 
     init(
         book: Book,
@@ -19,5 +21,6 @@ final class Quote {
         self.session = session
         self.text = text
         self.dateCreated = Date()
+        self.needsSync = true
     }
 }
