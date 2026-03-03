@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import Supabase
 import AuthenticationServices
 
@@ -52,7 +53,7 @@ final class AuthService {
         isAuthenticated = false
     }
 
-    // MARK: - Nonce Generation
+    // MARK: - Nonce Helpers
 
     static func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
@@ -66,7 +67,6 @@ final class AuthService {
     }
 
     static func sha256(_ input: String) -> String {
-        import CryptoKit
         let inputData = Data(input.utf8)
         let hashedData = SHA256.hash(data: inputData)
         return hashedData.compactMap { String(format: "%02x", $0) }.joined()
