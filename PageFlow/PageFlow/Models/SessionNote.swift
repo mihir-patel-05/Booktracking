@@ -11,6 +11,8 @@ final class SessionNote {
     var tags: [String]
     var chapterReference: String?
     var dateCreated: Date
+    var needsSync: Bool
+    var supabaseUserId: String?
 
     init(
         book: Book,
@@ -28,5 +30,6 @@ final class SessionNote {
         self.tags = tags
         self.chapterReference = chapterReference
         self.dateCreated = Date()
+        self.needsSync = true
     }
 }

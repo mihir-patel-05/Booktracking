@@ -12,6 +12,8 @@ final class Book {
     var statusRawValue: String
     var dateAdded: Date
     var dateCompleted: Date?
+    var needsSync: Bool
+    var supabaseUserId: String?
 
     @Relationship(deleteRule: .cascade, inverse: \ReadingSession.book)
     var sessions: [ReadingSession] = []
@@ -48,5 +50,6 @@ final class Book {
         self.currentPage = currentPage
         self.statusRawValue = status.rawValue
         self.dateAdded = Date()
+        self.needsSync = true
     }
 }

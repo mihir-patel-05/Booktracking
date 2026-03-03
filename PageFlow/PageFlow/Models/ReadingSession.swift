@@ -11,6 +11,8 @@ final class ReadingSession {
     var reflectionPrompt: String?
     var reflectionText: String?
     var xpEarned: Int
+    var needsSync: Bool
+    var supabaseUserId: String?
 
     init(
         book: Book,
@@ -29,5 +31,6 @@ final class ReadingSession {
         self.reflectionPrompt = reflectionPrompt
         self.reflectionText = reflectionText
         self.xpEarned = xpEarned
+        self.needsSync = true
     }
 }
