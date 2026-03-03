@@ -7,17 +7,20 @@ final class SupabaseManager {
 
     let client: SupabaseClient
 
-    // TODO: Replace with your actual Supabase credentials before running
-    private static let supabaseURL = "YOUR_SUPABASE_URL"
-    private static let supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY"
-
     private init() {
-        guard let url = URL(string: Self.supabaseURL) else {
-            fatalError("Invalid Supabase URL. Update SupabaseManager with your project URL.")
+        guard
+            let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+            let dict = NSDictionary(contentsOfFile: path),
+            let urlString = dict["SUPABASE_URL"] as? String,
+            let anonKey = dict["SUPABASE_ANON_KEY"] as? String,
+            let url = URL(string: urlString)
+        else {
+            fatalError("Missing or invalid Secrets.plist. Copy Secrets.example.plist to PageFlow/Secrets.plist and add your Supabase credentials.")
         }
+
         client = SupabaseClient(
             supabaseURL: url,
-            supabaseKey: Self.supabaseAnonKey
+            supabaseKey: anonKey
         )
     }
 }
