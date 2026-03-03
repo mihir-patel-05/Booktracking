@@ -22,15 +22,15 @@ final class SyncService {
         let total_pages: Int
         let current_page: Int
         let status: String
-        let date_added: String
-        let date_completed: String?
+        let date_added: Date
+        let date_completed: Date?
     }
 
     struct ReadingSessionDTO: Codable {
         let id: String
         let user_id: String
         let book_id: String
-        let start_date: String
+        let start_date: Date
         let duration_seconds: Int
         let mood_tags: [String]
         let reflection_prompt: String?
@@ -47,7 +47,7 @@ final class SyncService {
         let content: String
         let tags: [String]
         let chapter_reference: String?
-        let date_created: String
+        let date_created: Date
     }
 
     struct QuoteDTO: Codable {
@@ -56,7 +56,7 @@ final class SyncService {
         let book_id: String
         let session_id: String?
         let text: String
-        let date_created: String
+        let date_created: Date
     }
 
     struct UserStatsDTO: Codable {
@@ -65,7 +65,7 @@ final class SyncService {
         let total_xp: Int
         let current_streak: Int
         let longest_streak: Int
-        let last_session_date: String?
+        let last_session_date: Date?
         let streak_freezes_used_this_month: Int
         let streak_freeze_month_marker: Int
     }

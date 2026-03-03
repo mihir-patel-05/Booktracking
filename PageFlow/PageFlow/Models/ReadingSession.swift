@@ -14,6 +14,12 @@ final class ReadingSession {
     var needsSync: Bool
     var supabaseUserId: String?
 
+    @Relationship(deleteRule: .nullify, inverse: \SessionNote.session)
+    var notes: [SessionNote] = []
+
+    @Relationship(deleteRule: .nullify, inverse: \Quote.session)
+    var quotes: [Quote] = []
+
     init(
         book: Book,
         startDate: Date = Date(),
