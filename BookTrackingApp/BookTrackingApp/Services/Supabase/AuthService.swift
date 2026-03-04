@@ -45,6 +45,20 @@ final class AuthService {
         isAuthenticated = true
     }
 
+    // MARK: - Email/Password Auth
+
+    func signUp(email: String, password: String) async throws {
+        let result = try await supabase.auth.signUp(email: email, password: password)
+        currentUserId = result.user.id.uuidString
+        isAuthenticated = true
+    }
+
+    func signIn(email: String, password: String) async throws {
+        let session = try await supabase.auth.signIn(email: email, password: password)
+        currentUserId = session.user.id.uuidString
+        isAuthenticated = true
+    }
+
     // MARK: - Sign Out
 
     func signOut() async throws {
