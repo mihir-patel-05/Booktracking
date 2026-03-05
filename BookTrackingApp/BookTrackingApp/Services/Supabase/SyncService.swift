@@ -86,7 +86,29 @@ final class SyncService {
             print("Book sync failed: \(error)")
         }
 
-        // TODO: Future phases — syncSessions, syncNotes, syncQuotes, syncStats
+        do {
+            try await syncSessions(modelContext: modelContext, userId: userId)
+        } catch {
+            print("Session sync failed: \(error)")
+        }
+
+        do {
+            try await syncNotes(modelContext: modelContext, userId: userId)
+        } catch {
+            print("Notes sync failed: \(error)")
+        }
+
+        do {
+            try await syncQuotes(modelContext: modelContext, userId: userId)
+        } catch {
+            print("Quotes sync failed: \(error)")
+        }
+
+        do {
+            try await syncStats(modelContext: modelContext, userId: userId)
+        } catch {
+            print("Stats sync failed: \(error)")
+        }
     }
 
     private func syncBooks(modelContext: ModelContext, userId: String) async throws {
@@ -115,6 +137,114 @@ final class SyncService {
                 .execute()
 
             book.needsSync = false
+        }
+    }
+
+    private func syncSessions(modelContext: ModelContext, userId: String) async throws {
+        let descriptor = FetchDescriptor<ReadingSession>(
+            predicate: #Predicate<ReadingSession> { $0.needsSync == true }
+        )
+        let unsynced = try modelContext.fetch(descriptor)
+
+        for session in unsynced {
+            let dto = ReadingSessionDTO(
+                id: session.id.uuidString,
+                user_id: userId,
+                book_id: session.book?.id.uuidString ?? "",
+                start_date: session.startDate,
+                duration_seconds: session.durationSeconds,
+                mood_tags: session.moodTags,
+                reflection_prompt: session.reflectionPrompt,
+                reflection_text: session.reflectionText,
+                xp_earned: session.xpEarned
+            )
+
+            try await supabase
+                .from("reading_sessions")
+                .upsert(dto)
+                .execute()
+
+            session.needsSync = false
+        }
+    }
+
+    private func syncNotes(modelContext: ModelContext, userId: String) async throws {
+        let descriptor = FetchDescriptor<SessionNote>(
+            predicate: #Predicate<SessionNote> { $0.needsSync == true }
+        )
+        let unsynced = try modelContext.fetch(descriptor)
+
+        for note in unsynced {
+            let dto = SessionNoteDTO(
+                id: note.id.uuidString,
+                user_id: userId,
+                book_id: note.book?.id.uuidString ?? "",
+                session_id: note.session?.id.uuidString,
+                title: note.title,
+                content: note.content,
+                tags: note.tags,
+                chapter_reference: note.chapterReference,
+                date_created: note.dateCreated
+            )
+
+            try await supabase
+                .from("session_notes")
+                .upsert(dto)
+                .execute()
+
+            note.needsSync = false
+        }
+    }
+
+    private func syncQuotes(modelContext: ModelContext, userId: String) async throws {
+        let descriptor = FetchDescriptor<Quote>(
+            predicate: #Predicate<Quote> { $0.needsSync == true }
+        )
+        let unsynced = try modelContext.fetch(descriptor)
+
+        for quote in unsynced {
+            let dto = QuoteDTO(
+                id: quote.id.uuidString,
+                user_id: userId,
+                book_id: quote.book?.id.uuidString ?? "",
+                session_id: quote.session?.id.uuidString,
+                text: quote.text,
+                date_created: quote.dateCreated
+            )
+
+            try await supabase
+                .from("quotes")
+                .upsert(dto)
+                .execute()
+
+            quote.needsSync = false
+        }
+    }
+
+    private func syncStats(modelContext: ModelContext, userId: String) async throws {
+        let descriptor = FetchDescriptor<UserStats>(
+            predicate: #Predicate<UserStats> { $0.needsSync == true }
+        )
+        let unsynced = try modelContext.fetch(descriptor)
+
+        for stats in unsynced {
+            let dto = UserStatsDTO(
+                id: stats.id.uuidString,
+                user_id: userId,
+                total_xp: stats.totalXP,
+                current_streak: stats.currentStreak,
+                longest_streak: stats.longestStreak,
+                last_session_date: stats.lastSessionDate,
+                streak_freezes_used_this_month: stats.streakFreezesUsedThisMonth,
+                streak_freeze_month_marker: stats.streakFreezeMonthMarker
+            )
+
+            try await supabase
+                .from("user_stats")
+                .upsert(dto)
+                .execute()
+
+            stats.needsSync = false
         }
     }
 }
