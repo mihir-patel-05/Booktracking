@@ -9,6 +9,11 @@ struct HomeView: View {
     @Query(sort: \Book.dateAdded, order: .reverse)
     private var allBooks: [Book]
 
+    @Query(sort: \ReadingSession.startDate, order: .reverse)
+    private var recentSessions: [ReadingSession]
+
+    @Query private var stats: [UserStats]
+
     @State private var showAddSheet = false
 
     private var greeting: String {
@@ -30,7 +35,9 @@ struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         greetingSection
+                        if stats.first != nil { streakSection }
                         currentlyReadingSection
+                        if !recentSessions.isEmpty { recentSessionsSection }
                         librarySection
                     }
                     .padding()
@@ -105,6 +112,100 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Streak Section
+
+    private var streakSection: some View {
+        let userStats = stats.first!
+        return HStack(spacing: 12) {
+            Image(systemName: "flame.fill")
+                .font(.title2)
+                .foregroundStyle(Theme.streak)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(userStats.currentStreak) day streak")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Theme.textPrimary)
+
+                HStack(spacing: 8) {
+                    Image(systemName: userStats.currentLevel.icon)
+                        .font(.caption)
+                        .foregroundStyle(Theme.accent)
+                    Text(userStats.currentLevel.rawValue)
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("\(userStats.totalXP) XP")
+                    .font(.caption.bold())
+                    .foregroundStyle(Theme.accent)
+                ProgressBar(
+                    progress: userStats.levelProgress,
+                    height: 4,
+                    foregroundColor: Theme.accent
+                )
+                .frame(width: 60)
+            }
+        }
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Recent Sessions Section
+
+    private var recentSessionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recent Sessions")
+                .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
+
+            ForEach(Array(recentSessions.prefix(3))) { session in
+                HStack(spacing: 12) {
+                    Image(systemName: "timer")
+                        .foregroundStyle(Theme.accent)
+                        .frame(width: 24)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(session.book?.title ?? "Unknown Book")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineLimit(1)
+
+                        HStack(spacing: 8) {
+                            Text("\(session.durationSeconds / 60) min")
+                                .font(.caption)
+                                .foregroundStyle(Theme.textSecondary)
+
+                            Text(session.startDate.formatted(date: .abbreviated, time: .omitted))
+                                .font(.caption)
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                    }
+
+                    Spacer()
+
+                    // Mood dots
+                    HStack(spacing: 2) {
+                        ForEach(session.moodTags.prefix(3), id: \.self) { tagString in
+                            if let mood = MoodTag(rawValue: tagString) {
+                                Circle()
+                                    .fill(mood.color)
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
+                    }
+                }
+                .padding(12)
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
     private var librarySection: some View {
         NavigationLink {
             BookLibraryView()
@@ -138,6 +239,6 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
-        .modelContainer(for: Book.self, inMemory: true)
+        .modelContainer(for: [Book.self, ReadingSession.self, UserStats.self], inMemory: true)
         .preferredColorScheme(.dark)
 }

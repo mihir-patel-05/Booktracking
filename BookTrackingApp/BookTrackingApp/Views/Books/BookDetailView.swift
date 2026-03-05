@@ -6,8 +6,12 @@ struct BookDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var book: Book
 
+    @Environment(AuthService.self) private var authService
+
     @State private var pageInput = ""
     @State private var showDeleteConfirmation = false
+    @State private var showAddNote = false
+    @State private var showAddQuote = false
 
     var body: some View {
         ZStack {
@@ -19,6 +23,9 @@ struct BookDetailView: View {
                     infoSection
                     progressSection
                     statusSection
+                    sessionsSection
+                    notesSection
+                    quotesSection
                     deleteSection
                 }
                 .padding()
@@ -35,6 +42,12 @@ struct BookDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently delete \"\(book.title)\" and all associated sessions, notes, and quotes.")
+        }
+        .sheet(isPresented: $showAddNote) {
+            AddNoteView(preselectedBook: book)
+        }
+        .sheet(isPresented: $showAddQuote) {
+            AddQuoteView(preselectedBook: book)
         }
         .onAppear {
             pageInput = String(book.currentPage)
@@ -160,6 +173,152 @@ struct BookDetailView: View {
                 }
             }
             .pickerStyle(.segmented)
+        }
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Sessions Section
+
+    private var sessionsSection: some View {
+        let sortedSessions = book.sessions.sorted { $0.startDate > $1.startDate }
+        let totalMinutes = book.sessions.reduce(0) { $0 + $1.durationSeconds } / 60
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Reading Sessions")
+                    .font(.headline)
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text("\(book.sessions.count)")
+                    .font(.caption.bold())
+                    .foregroundStyle(Theme.textMuted)
+            }
+
+            if book.sessions.isEmpty {
+                Text("No sessions yet. Start a reading timer!")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+            } else {
+                Text("Total: \(totalMinutes) min")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+
+                ForEach(Array(sortedSessions.prefix(3))) { session in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(session.startDate.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption)
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("\(session.durationSeconds / 60) min")
+                                .font(.caption2)
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                        Spacer()
+                        HStack(spacing: 2) {
+                            ForEach(session.moodTags, id: \.self) { tagString in
+                                if let mood = MoodTag(rawValue: tagString) {
+                                    Text(mood.emoji)
+                                        .font(.caption2)
+                                }
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .background(Theme.cardBackgroundLight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+        }
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Notes Section
+
+    private var notesSection: some View {
+        let sortedNotes = book.notes.sorted { $0.dateCreated > $1.dateCreated }
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Notes")
+                    .font(.headline)
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Button {
+                    showAddNote = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(Theme.accent)
+                }
+            }
+
+            if book.notes.isEmpty {
+                Text("No notes yet.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+            } else {
+                ForEach(Array(sortedNotes.prefix(3))) { note in
+                    NavigationLink {
+                        NoteDetailView(note: note)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(note.title)
+                                .font(.caption.bold())
+                                .foregroundStyle(Theme.textPrimary)
+                                .lineLimit(1)
+                            Text(note.content)
+                                .font(.caption2)
+                                .foregroundStyle(Theme.textSecondary)
+                                .lineLimit(2)
+                            Text(note.dateCreated.formatted(date: .abbreviated, time: .omitted))
+                                .font(.caption2)
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(8)
+                        .background(Theme.cardBackgroundLight)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Quotes Section
+
+    private var quotesSection: some View {
+        let sortedQuotes = book.quotes.sorted { $0.dateCreated > $1.dateCreated }
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Quotes")
+                    .font(.headline)
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Button {
+                    showAddQuote = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(Theme.accent)
+                }
+            }
+
+            if book.quotes.isEmpty {
+                Text("No quotes saved yet.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+            } else {
+                ForEach(Array(sortedQuotes.prefix(3))) { quote in
+                    QuoteCard(quote: quote)
+                }
+            }
         }
         .padding()
         .background(Theme.cardBackground)
