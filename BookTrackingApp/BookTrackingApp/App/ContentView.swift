@@ -1,7 +1,11 @@
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     @Environment(AuthService.self) private var authService
+    @Environment(SyncService.self) private var syncService
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -14,6 +18,13 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background, let userId = authService.currentUserId {
+                Task {
+                    await syncService.syncAll(modelContext: modelContext, userId: userId)
+                }
+            }
+        }
     }
 
     private var loadingView: some View {
@@ -58,4 +69,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environment(AuthService())
+        .environment(SyncService())
 }

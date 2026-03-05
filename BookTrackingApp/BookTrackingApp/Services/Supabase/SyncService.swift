@@ -70,7 +70,7 @@ final class SyncService {
         let streak_freeze_month_marker: Int
     }
 
-    // MARK: - Sync (placeholder — will be implemented in later phases)
+    // MARK: - Sync
 
     func syncAll(modelContext: ModelContext, userId: String) async {
         guard !isSyncing else { return }
@@ -80,10 +80,41 @@ final class SyncService {
             lastSyncDate = Date()
         }
 
-        // TODO: Phase 2+ — implement per-entity sync:
-        // 1. Query SwiftData for items where needsSync == true
-        // 2. Upsert to Supabase
-        // 3. Mark needsSync = false on success
-        // 4. Pull remote changes not in local store
+        do {
+            try await syncBooks(modelContext: modelContext, userId: userId)
+        } catch {
+            print("Book sync failed: \(error)")
+        }
+
+        // TODO: Future phases — syncSessions, syncNotes, syncQuotes, syncStats
+    }
+
+    private func syncBooks(modelContext: ModelContext, userId: String) async throws {
+        let descriptor = FetchDescriptor<Book>(
+            predicate: #Predicate<Book> { $0.needsSync == true }
+        )
+        let unsyncedBooks = try modelContext.fetch(descriptor)
+
+        for book in unsyncedBooks {
+            let dto = BookDTO(
+                id: book.id.uuidString,
+                user_id: userId,
+                title: book.title,
+                author: book.author,
+                cover_url: book.coverURL,
+                total_pages: book.totalPages,
+                current_page: book.currentPage,
+                status: book.statusRawValue,
+                date_added: book.dateAdded,
+                date_completed: book.dateCompleted
+            )
+
+            try await supabase
+                .from("books")
+                .upsert(dto)
+                .execute()
+
+            book.needsSync = false
+        }
     }
 }
