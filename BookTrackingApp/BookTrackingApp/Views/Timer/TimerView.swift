@@ -344,37 +344,12 @@ struct TimerView: View {
     }
 
     private func transitionToPostSession() {
-        reflectionPrompt = Prompts.reflections.randomElement() ?? ""
         withAnimation { phase = .postSession }
     }
 
-    // MARK: - Save Logic
+    // MARK: - Stats
 
-    private func saveSession() {
-        guard let book = selectedBook else { return }
-        let elapsed = timerService.elapsedSeconds
-
-        // Calculate XP
-        var xp = XPValues.sessionCompletion
-        if !selectedMoodTags.isEmpty { xp += XPValues.moodTagsSelected }
-        if !reflectionText.trimmingCharacters(in: .whitespaces).isEmpty {
-            xp += XPValues.journalReflection
-        }
-        xp = min(xp, XPValues.maxPerSession)
-
-        let session = ReadingSession(
-            book: book,
-            durationSeconds: elapsed,
-            moodTags: selectedMoodTags.map { $0.rawValue },
-            reflectionPrompt: reflectionPrompt.isEmpty ? nil : reflectionPrompt,
-            reflectionText: reflectionText.trimmingCharacters(in: .whitespaces).isEmpty ? nil : reflectionText,
-            xpEarned: xp
-        )
-        session.supabaseUserId = authService.currentUserId
-        modelContext.insert(session)
-        savedSession = session
-
-        // Update UserStats
+    private func updateUserStats(xp: Int) {
         let userStats: UserStats
         if let existing = stats.first {
             userStats = existing
@@ -386,9 +361,6 @@ struct TimerView: View {
         userStats.totalXP += xp
         updateStreak(userStats)
         userStats.needsSync = true
-
-        earnedXP = xp
-        withAnimation { sessionSaved = true }
     }
 
     private func updateStreak(_ stats: UserStats) {
@@ -416,9 +388,6 @@ struct TimerView: View {
         selectedBook = nil
         timerService.reset()
         customMinutesInput = ""
-        selectedMoodTags = []
-        reflectionPrompt = ""
-        reflectionText = ""
         sessionSaved = false
         earnedXP = 0
         savedSession = nil
