@@ -32,15 +32,8 @@ struct TimerView: View {
     @State private var selectedBook: Book?
 
     // Post-session state
-    @State private var selectedMoodTags: Set<MoodTag> = []
-    @State private var reflectionPrompt = ""
-    @State private var reflectionText = ""
     @State private var sessionSaved = false
     @State private var earnedXP = 0
-
-    // Sheets
-    @State private var showAddNote = false
-    @State private var showAddQuote = false
     @State private var savedSession: ReadingSession?
 
     var body: some View {
@@ -273,166 +266,52 @@ struct TimerView: View {
 
     // MARK: - Post Session View
 
+    @ViewBuilder
     private var postSessionView: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                if sessionSaved {
-                    // XP Summary
-                    VStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 48))
-                            .foregroundStyle(Theme.success)
+        if sessionSaved {
+            ScrollView {
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(Theme.success)
 
-                        Text("Session Saved!")
-                            .font(.title2.bold())
-                            .foregroundStyle(Theme.textPrimary)
+                    Text("Session Saved!")
+                        .font(.title2.bold())
+                        .foregroundStyle(Theme.textPrimary)
 
-                        Text("+\(earnedXP) XP")
-                            .font(.title.bold())
-                            .foregroundStyle(Theme.accent)
+                    Text("+\(earnedXP) XP")
+                        .font(.title.bold())
+                        .foregroundStyle(Theme.accent)
 
-                        Button {
-                            resetToSetup()
-                        } label: {
-                            Text("Done")
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Theme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        .padding(.top, 8)
-                    }
-                    .padding()
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                } else {
-                    // Session Complete Header
-                    VStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 40))
-                            .foregroundStyle(Theme.success)
-
-                        Text("Session Complete")
-                            .font(.title2.bold())
-                            .foregroundStyle(Theme.textPrimary)
-
-                        Text(timerService.formattedElapsedTime)
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-
-                    // Mood Tags
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("How did this session feel?")
-                            .font(.headline)
-                            .foregroundStyle(Theme.textPrimary)
-
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 110))], spacing: 8) {
-                            ForEach(MoodTag.allCases, id: \.self) { mood in
-                                MoodTagPill(
-                                    mood: mood,
-                                    isSelected: selectedMoodTags.contains(mood)
-                                ) {
-                                    if selectedMoodTags.contains(mood) {
-                                        selectedMoodTags.remove(mood)
-                                    } else {
-                                        selectedMoodTags.insert(mood)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Reflection
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Reflection")
-                            .font(.headline)
-                            .foregroundStyle(Theme.textPrimary)
-
-                        if !reflectionPrompt.isEmpty {
-                            HStack(spacing: 8) {
-                                Image(systemName: "lightbulb.fill")
-                                    .foregroundStyle(Theme.streak)
-                                    .font(.caption)
-                                Text(reflectionPrompt)
-                                    .font(.caption)
-                                    .foregroundStyle(Theme.textSecondary)
-                                    .italic()
-                            }
-                            .padding(10)
-                            .background(Theme.cardBackgroundLight)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-
-                        TextEditor(text: $reflectionText)
-                            .scrollContentBackground(.hidden)
-                            .foregroundStyle(Theme.textPrimary)
-                            .frame(minHeight: 100)
-                            .padding(12)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-
-                    // Quick Actions
-                    HStack(spacing: 12) {
-                        Button {
-                            showAddNote = true
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "note.text.badge.plus")
-                                Text("Add Note")
-                                    .font(.subheadline.bold())
-                            }
-                            .foregroundStyle(Theme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-
-                        Button {
-                            showAddQuote = true
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "quote.opening")
-                                Text("Save Quote")
-                                    .font(.subheadline.bold())
-                            }
-                            .foregroundStyle(Theme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                    }
-
-                    // Save Button
                     Button {
-                        saveSession()
+                        resetToSetup()
                     } label: {
-                        Text("Save Session")
+                        Text("Done")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                            .padding(.vertical, 14)
                             .background(Theme.accent)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
+                    .padding(.top, 8)
                 }
+                .padding()
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding()
             }
-            .padding()
-        }
-        .sheet(isPresented: $showAddNote) {
-            if let book = selectedBook {
-                AddNoteView(preselectedBook: book)
-            }
-        }
-        .sheet(isPresented: $showAddQuote) {
-            if let book = selectedBook {
-                AddQuoteView(preselectedBook: book)
-            }
+        } else if let book = selectedBook {
+            JournalFlowView(
+                book: book,
+                timerService: timerService,
+                onSave: { session, xp in
+                    savedSession = session
+                    earnedXP = xp
+                    updateUserStats(xp: xp)
+                    withAnimation { sessionSaved = true }
+                }
+            )
         }
     }
 
