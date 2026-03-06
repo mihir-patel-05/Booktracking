@@ -5,6 +5,7 @@ import SwiftData
 struct PageFlowApp: App {
     @State private var authService = AuthService()
     @State private var syncService = SyncService()
+    @State private var notificationService = NotificationService()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -31,6 +32,10 @@ struct PageFlowApp: App {
             ContentView()
                 .environment(authService)
                 .environment(syncService)
+                .environment(notificationService)
+                .task {
+                    await notificationService.requestPermission()
+                }
         }
         .modelContainer(sharedModelContainer)
     }

@@ -12,6 +12,7 @@ private enum TimerPhase {
 struct TimerView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AuthService.self) private var authService
+    @Environment(NotificationService.self) private var notificationService
     @Environment(\.scenePhase) private var scenePhase
 
     @Query(filter: #Predicate<Book> { $0.statusRawValue == "Currently Reading" },
@@ -23,16 +24,12 @@ struct TimerView: View {
     // Phase
     @State private var phase: TimerPhase = .setup
 
-    // Setup state
-    @State private var selectedBook: Book?
-    @State private var selectedPreset: TimerPreset? = .twentyFive
-    @State private var customMinutes = ""
-    @State private var totalSeconds = 25 * 60
+    // Timer service (local — only used by this view)
+    @State private var timerService = TimerService()
+    @State private var customMinutesInput = ""
 
-    // Active state
-    @State private var remainingSeconds: Int = 25 * 60
-    @State private var isRunning = false
-    @State private var timer: Foundation.Timer?
+    // Book selection
+    @State private var selectedBook: Book?
 
     // Post-session state
     @State private var selectedMoodTags: Set<MoodTag> = []
@@ -63,8 +60,25 @@ struct TimerView: View {
             .navigationTitle("Timer")
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
-        .onDisappear {
-            timer?.invalidate()
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .background:
+                timerService.handleBackground()
+            case .active:
+                timerService.handleForeground()
+                if timerService.isCompleted && phase == .active {
+                    notificationService.cancelTimerNotification()
+                    transitionToPostSession()
+                }
+            default:
+                break
+            }
+        }
+        .onChange(of: timerService.isCompleted) { _, completed in
+            if completed && phase == .active {
+                notificationService.cancelTimerNotification()
+                transitionToPostSession()
+            }
         }
     }
 
@@ -124,16 +138,15 @@ struct TimerView: View {
                     HStack(spacing: 10) {
                         ForEach(TimerPreset.allCases, id: \.self) { preset in
                             Button {
-                                selectedPreset = preset
-                                totalSeconds = preset.rawValue * 60
-                                customMinutes = ""
+                                timerService.selectPreset(preset)
+                                customMinutesInput = ""
                             } label: {
                                 Text(preset.label)
                                     .font(.subheadline.bold())
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(selectedPreset == preset ? Theme.accent : Theme.cardBackground)
-                                    .foregroundStyle(selectedPreset == preset ? .white : Theme.textSecondary)
+                                    .background(timerService.selectedPreset == preset ? Theme.accent : Theme.cardBackground)
+                                    .foregroundStyle(timerService.selectedPreset == preset ? .white : Theme.textSecondary)
                                     .clipShape(Capsule())
                             }
                         }
@@ -141,7 +154,7 @@ struct TimerView: View {
 
                     // Custom time
                     HStack(spacing: 8) {
-                        TextField("Custom", text: $customMinutes)
+                        TextField("Custom", text: $customMinutesInput)
                             .keyboardType(.numberPad)
                             .foregroundStyle(Theme.textPrimary)
                             .padding(12)
@@ -149,10 +162,7 @@ struct TimerView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
 
                         Button {
-                            if let mins = Int(customMinutes), mins > 0 {
-                                totalSeconds = mins * 60
-                                selectedPreset = nil
-                            }
+                            timerService.setCustomMinutes(customMinutesInput)
                         } label: {
                             Text("Set")
                                 .font(.subheadline.bold())
@@ -209,22 +219,19 @@ struct TimerView: View {
 
             // Circular Timer
             ZStack {
-                // Background track
                 Circle()
                     .stroke(Theme.cardBackgroundLight, lineWidth: 8)
                     .frame(width: 220, height: 220)
 
-                // Progress arc
                 Circle()
-                    .trim(from: 0, to: timerProgress)
+                    .trim(from: 0, to: timerService.progress)
                     .stroke(Theme.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     .frame(width: 220, height: 220)
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: timerProgress)
+                    .animation(.linear(duration: 1), value: timerService.progress)
 
-                // Time display
                 VStack(spacing: 4) {
-                    Text(formattedTime)
+                    Text(timerService.formattedTime)
                         .font(.system(size: 48, weight: .bold, design: .monospaced))
                         .foregroundStyle(Theme.textPrimary)
                     Text("remaining")
@@ -237,11 +244,10 @@ struct TimerView: View {
 
             // Controls
             HStack(spacing: 24) {
-                // Pause/Resume
                 Button {
                     togglePause()
                 } label: {
-                    Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                    Image(systemName: timerService.isRunning ? "pause.fill" : "play.fill")
                         .font(.title2)
                         .foregroundStyle(.white)
                         .frame(width: 64, height: 64)
@@ -249,7 +255,6 @@ struct TimerView: View {
                         .clipShape(Circle())
                 }
 
-                // Stop
                 Button {
                     stopTimer()
                 } label: {
@@ -313,7 +318,7 @@ struct TimerView: View {
                             .font(.title2.bold())
                             .foregroundStyle(Theme.textPrimary)
 
-                        Text(formattedElapsedTime)
+                        Text(timerService.formattedElapsedTime)
                             .font(.subheadline)
                             .foregroundStyle(Theme.textSecondary)
                     }
@@ -431,61 +436,31 @@ struct TimerView: View {
         }
     }
 
-    // MARK: - Timer Logic
-
-    private var timerProgress: Double {
-        guard totalSeconds > 0 else { return 0 }
-        return Double(totalSeconds - remainingSeconds) / Double(totalSeconds)
-    }
-
-    private var formattedTime: String {
-        let mins = remainingSeconds / 60
-        let secs = remainingSeconds % 60
-        return String(format: "%02d:%02d", mins, secs)
-    }
-
-    private var formattedElapsedTime: String {
-        let elapsed = totalSeconds - remainingSeconds
-        let mins = elapsed / 60
-        let secs = elapsed % 60
-        if mins > 0 {
-            return "\(mins) min \(secs) sec"
-        }
-        return "\(secs) sec"
-    }
+    // MARK: - Timer Actions
 
     private func startTimer() {
-        remainingSeconds = totalSeconds
-        isRunning = true
+        timerService.start()
+        if let endDate = timerService.targetEndDate {
+            notificationService.scheduleTimerCompletion(at: endDate)
+        }
         withAnimation { phase = .active }
-        startTimerTick()
     }
 
-    private func startTimerTick() {
-        timer = Foundation.Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            if remainingSeconds > 0 {
-                remainingSeconds -= 1
-            } else {
-                timer?.invalidate()
-                isRunning = false
-                transitionToPostSession()
+    private func togglePause() {
+        if timerService.isRunning {
+            timerService.pause()
+            notificationService.cancelTimerNotification()
+        } else {
+            timerService.resume()
+            if let endDate = timerService.targetEndDate {
+                notificationService.scheduleTimerCompletion(at: endDate)
             }
         }
     }
 
-    private func togglePause() {
-        if isRunning {
-            timer?.invalidate()
-            isRunning = false
-        } else {
-            isRunning = true
-            startTimerTick()
-        }
-    }
-
     private func stopTimer() {
-        timer?.invalidate()
-        isRunning = false
+        timerService.stop()
+        notificationService.cancelTimerNotification()
         transitionToPostSession()
     }
 
@@ -498,7 +473,7 @@ struct TimerView: View {
 
     private func saveSession() {
         guard let book = selectedBook else { return }
-        let elapsed = totalSeconds - remainingSeconds
+        let elapsed = timerService.elapsedSeconds
 
         // Calculate XP
         var xp = XPValues.sessionCompletion
@@ -550,7 +525,6 @@ struct TimerView: View {
             } else if daysBetween > 1 {
                 stats.currentStreak = 1
             }
-            // daysBetween == 0: same day, don't change streak
         } else {
             stats.currentStreak = 1
         }
@@ -561,10 +535,8 @@ struct TimerView: View {
 
     private func resetToSetup() {
         selectedBook = nil
-        selectedPreset = .twentyFive
-        customMinutes = ""
-        totalSeconds = 25 * 60
-        remainingSeconds = 25 * 60
+        timerService.reset()
+        customMinutesInput = ""
         selectedMoodTags = []
         reflectionPrompt = ""
         reflectionText = ""
@@ -578,5 +550,7 @@ struct TimerView: View {
 #Preview {
     TimerView()
         .modelContainer(for: [Book.self, ReadingSession.self, UserStats.self, SessionNote.self, Quote.self])
+        .environment(AuthService())
+        .environment(NotificationService())
         .preferredColorScheme(.dark)
 }
