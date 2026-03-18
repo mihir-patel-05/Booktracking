@@ -19,7 +19,12 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .background, let userId = authService.currentUserId {
+            #if os(macOS)
+            let shouldSync = newPhase == .inactive
+            #else
+            let shouldSync = newPhase == .background
+            #endif
+            if shouldSync, let userId = authService.currentUserId {
                 Task {
                     await syncService.syncAll(modelContext: modelContext, userId: userId)
                 }
@@ -36,6 +41,9 @@ struct ContentView: View {
     }
 
     private var mainTabView: some View {
+        #if os(macOS)
+        MacContentView()
+        #else
         TabView {
             HomeView()
                 .tabItem {
@@ -63,6 +71,7 @@ struct ContentView: View {
                 }
         }
         .tint(Theme.accent)
+        #endif
     }
 }
 
