@@ -32,8 +32,10 @@ struct BookDetailView: View {
             }
         }
         .navigationTitle(book.title)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
         .alert("Delete Book?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 modelContext.delete(book)

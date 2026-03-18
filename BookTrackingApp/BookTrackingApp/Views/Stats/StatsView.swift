@@ -45,7 +45,9 @@ struct StatsView: View {
                 }
             }
             .navigationTitle("Stats")
+            #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
         }
     }
 

@@ -51,7 +51,9 @@ struct TimerView: View {
                 }
             }
             .navigationTitle("Timer")
+            #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {

@@ -44,7 +44,9 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("PageFlow")
+            #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button { showAddSheet = true } label: {
