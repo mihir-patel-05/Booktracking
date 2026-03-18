@@ -150,7 +150,9 @@ struct TimerView: View {
                     // Custom time
                     HStack(spacing: 8) {
                         TextField("Custom", text: $customMinutesInput)
+                            #if os(iOS)
                             .keyboardType(.numberPad)
+                            #endif
                             .foregroundStyle(Theme.textPrimary)
                             .padding(12)
                             .background(Theme.cardBackground)
