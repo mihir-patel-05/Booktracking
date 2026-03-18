@@ -64,6 +64,14 @@ struct PageFlowApp: App {
             }
         }
         #endif
+
+        #if os(macOS)
+        MenuBarExtra("PageFlow Timer", systemImage: "timer") {
+            MenuBarTimerView()
+                .environment(timerService)
+        }
+        .menuBarExtraStyle(.window)
+        #endif
     }
 }
 
