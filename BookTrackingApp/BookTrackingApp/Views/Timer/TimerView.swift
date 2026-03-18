@@ -24,12 +24,21 @@ struct TimerView: View {
     // Phase
     @State private var phase: TimerPhase = .setup
 
-    // Timer service (local — only used by this view)
-    @State private var timerService = TimerService()
+    // Timer service (shared via environment for menu bar access)
+    @Environment(TimerService.self) private var timerService
     @State private var customMinutesInput = ""
 
     // Book selection
     @State private var selectedBook: Book?
+
+    // Platform-specific sizing
+    #if os(macOS)
+    private let timerCircleSize: CGFloat = 320
+    private let controlButtonSize: CGFloat = 72
+    #else
+    private let timerCircleSize: CGFloat = 220
+    private let controlButtonSize: CGFloat = 64
+    #endif
 
     // Post-session state
     @State private var sessionSaved = false
@@ -57,7 +66,7 @@ struct TimerView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
-            case .background:
+            case .background, .inactive:
                 timerService.handleBackground()
             case .active:
                 timerService.handleForeground()
@@ -65,7 +74,7 @@ struct TimerView: View {
                     notificationService.cancelTimerNotification()
                     transitionToPostSession()
                 }
-            default:
+            @unknown default:
                 break
             }
         }
@@ -218,12 +227,12 @@ struct TimerView: View {
             ZStack {
                 Circle()
                     .stroke(Theme.cardBackgroundLight, lineWidth: 8)
-                    .frame(width: 220, height: 220)
+                    .frame(width: timerCircleSize, height: timerCircleSize)
 
                 Circle()
                     .trim(from: 0, to: timerService.progress)
                     .stroke(Theme.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 220, height: 220)
+                    .frame(width: timerCircleSize, height: timerCircleSize)
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 1), value: timerService.progress)
 
@@ -247,7 +256,7 @@ struct TimerView: View {
                     Image(systemName: timerService.isRunning ? "pause.fill" : "play.fill")
                         .font(.title2)
                         .foregroundStyle(.white)
-                        .frame(width: 64, height: 64)
+                        .frame(width: controlButtonSize, height: controlButtonSize)
                         .background(Theme.accent)
                         .clipShape(Circle())
                 }
@@ -258,7 +267,7 @@ struct TimerView: View {
                     Image(systemName: "stop.fill")
                         .font(.title2)
                         .foregroundStyle(.white)
-                        .frame(width: 64, height: 64)
+                        .frame(width: controlButtonSize, height: controlButtonSize)
                         .background(Theme.error)
                         .clipShape(Circle())
                 }
@@ -404,5 +413,6 @@ struct TimerView: View {
         .modelContainer(for: [Book.self, ReadingSession.self, UserStats.self, SessionNote.self, Quote.self])
         .environment(AuthService())
         .environment(NotificationService())
+        .environment(TimerService())
         .preferredColorScheme(.dark)
 }
