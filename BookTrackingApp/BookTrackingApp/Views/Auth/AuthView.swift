@@ -40,9 +40,11 @@ struct AuthView: View {
                     VStack(spacing: 16) {
                         TextField("Email", text: $email)
                             .textContentType(.emailAddress)
+                            #if os(iOS)
                             .keyboardType(.emailAddress)
-                            .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
+                            #endif
+                            .autocorrectionDisabled()
                             .padding()
                             .background(Theme.cardBackground)
                             .foregroundStyle(Theme.textPrimary)

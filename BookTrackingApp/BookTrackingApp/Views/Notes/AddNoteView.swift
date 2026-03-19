@@ -110,8 +110,10 @@ struct AddNoteView: View {
                 }
             }
             .navigationTitle("Add Note")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

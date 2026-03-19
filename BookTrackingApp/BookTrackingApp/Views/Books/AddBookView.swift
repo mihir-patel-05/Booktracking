@@ -24,11 +24,15 @@ struct AddBookView: View {
                         TextField("Title", text: $title)
                         TextField("Author", text: $author)
                         TextField("Total Pages", text: $totalPages)
+                            #if os(iOS)
                             .keyboardType(.numberPad)
+                            #endif
                         TextField("Cover URL (optional)", text: $coverURL)
+                            #if os(iOS)
                             .keyboardType(.URL)
-                            .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
+                            #endif
+                            .autocorrectionDisabled()
                     }
                     .listRowBackground(Theme.cardBackground)
                     .foregroundStyle(Theme.textPrimary)
@@ -69,8 +73,10 @@ struct AddBookView: View {
                 .scrollContentBackground(.hidden)
             }
             .navigationTitle(prefill != nil ? "Add Book" : "New Book")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

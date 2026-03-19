@@ -67,7 +67,9 @@ struct NotesView: View {
                 }
             }
             .navigationTitle("Notes")
+            #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .searchable(text: $searchText, prompt: "Search notes...")
             .navigationDestination(for: SessionNote.self) { note in
                 NoteDetailView(note: note)

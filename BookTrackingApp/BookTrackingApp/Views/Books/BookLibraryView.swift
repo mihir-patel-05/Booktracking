@@ -52,8 +52,10 @@ struct BookLibraryView: View {
             }
         }
         .navigationTitle("My Library")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
         .navigationDestination(for: Book.self) { book in
             BookDetailView(book: book)
         }

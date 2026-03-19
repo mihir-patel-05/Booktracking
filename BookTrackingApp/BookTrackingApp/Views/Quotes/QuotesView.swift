@@ -41,7 +41,9 @@ struct QuotesView: View {
                 }
             }
             .navigationTitle("Quotes")
+            #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .searchable(text: $searchText, prompt: "Search quotes...")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

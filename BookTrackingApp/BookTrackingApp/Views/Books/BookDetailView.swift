@@ -32,8 +32,10 @@ struct BookDetailView: View {
             }
         }
         .navigationTitle(book.title)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
         .alert("Delete Book?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 modelContext.delete(book)
@@ -119,7 +121,9 @@ struct BookDetailView: View {
 
             HStack(spacing: 12) {
                 TextField("Page", text: $pageInput)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .padding(10)
                     .background(Theme.cardBackground)
                     .foregroundStyle(Theme.textPrimary)

@@ -60,8 +60,10 @@ struct AddQuoteView: View {
                 }
             }
             .navigationTitle("Add Quote")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

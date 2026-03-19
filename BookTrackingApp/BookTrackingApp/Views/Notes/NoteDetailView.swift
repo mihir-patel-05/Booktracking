@@ -89,7 +89,9 @@ struct NoteDetailView: View {
             }
         }
         .navigationTitle("Note")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
     }
 }
