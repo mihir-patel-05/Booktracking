@@ -4,10 +4,10 @@ struct BookSearchView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var query = ""
-    @State private var results: [OpenLibraryDoc] = []
+    @State private var results: [GoogleBookItem] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
-    @State private var selectedDoc: OpenLibraryDoc?
+    @State private var selectedDoc: GoogleBookItem?
     @State private var showAddSheet = false
     @State private var showManualAdd = false
 
@@ -147,7 +147,7 @@ struct BookSearchView: View {
 }
 
 private struct SearchResultRow: View {
-    let doc: OpenLibraryDoc
+    let doc: GoogleBookItem
 
     var body: some View {
         HStack(spacing: 12) {
