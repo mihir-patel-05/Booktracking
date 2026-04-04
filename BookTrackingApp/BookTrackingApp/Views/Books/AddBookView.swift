@@ -12,7 +12,7 @@ struct AddBookView: View {
     @State private var coverURL = ""
     @State private var selectedStatus: BookStatus = .wantToRead
 
-    var prefill: OpenLibraryDoc?
+    var prefill: GoogleBookItem?
 
     var body: some View {
         NavigationStack {
