@@ -153,13 +153,20 @@ struct BookDetailView: View {
     }
 
     private var statusSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // Read `book.status` here so SwiftUI's Observation framework
+        // registers it as a dependency of the view body. Without this,
+        // the Picker's custom Binding reads `book.status` only inside a
+        // closure, so updates never trigger a re-render and the picker
+        // appears dead.
+        let currentStatus = book.status
+
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Status")
                 .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
 
             Picker("Status", selection: Binding(
-                get: { book.status },
+                get: { currentStatus },
                 set: { newStatus in
                     book.status = newStatus
                     book.needsSync = true
