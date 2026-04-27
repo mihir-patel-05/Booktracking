@@ -2,32 +2,37 @@ import SwiftUI
 
 struct JournalStepIndicator: View {
     let currentStep: Int
-    private let steps = ["Mood", "Notes", "Save"]
+    private let steps = ["Mood", "Notes", "Quote"]
 
     var body: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 8) {
             ForEach(0..<steps.count, id: \.self) { index in
                 VStack(spacing: 6) {
-                    Circle()
-                        .fill(color(for: index))
-                        .frame(width: 10, height: 10)
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(barColor(for: index))
+                        .frame(height: 3)
 
-                    Text(steps[index])
-                        .font(.caption2)
-                        .foregroundStyle(index <= currentStep ? Theme.textSecondary : Theme.textMuted)
+                    Text(steps[index].uppercased())
+                        .font(.dmSans(9, weight: .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(textColor(for: index))
                 }
+                .frame(maxWidth: .infinity)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: currentStep)
+        .animation(.easeInOut(duration: 0.25), value: currentStep)
+        .padding(.horizontal, 20)
     }
 
-    private func color(for index: Int) -> Color {
-        if index == currentStep {
-            return Theme.accent
-        } else if index < currentStep {
-            return Theme.accentLight
-        } else {
-            return Theme.cardBackgroundLight
-        }
+    private func barColor(for index: Int) -> Color {
+        if index < currentStep { return Theme.accent }
+        if index == currentStep { return Theme.accentLight }
+        return Theme.cardBackgroundLight
+    }
+
+    private func textColor(for index: Int) -> Color {
+        if index == currentStep { return Theme.accentLight }
+        if index < currentStep { return Theme.textSecondary }
+        return Theme.textMuted
     }
 }

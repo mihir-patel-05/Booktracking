@@ -15,121 +15,155 @@ struct AuthView: View {
         ZStack {
             Theme.background.ignoresSafeArea()
 
+            // Subtle radial accent in the corners
+            RadialGradient(
+                colors: [Theme.accent.opacity(0.18), Color.clear],
+                center: .topTrailing,
+                startRadius: 50,
+                endRadius: 360
+            )
+            .ignoresSafeArea()
+
+            RadialGradient(
+                colors: [Theme.accent.opacity(0.10), Color.clear],
+                center: .bottomLeading,
+                startRadius: 50,
+                endRadius: 320
+            )
+            .ignoresSafeArea()
+
             ScrollView {
-                VStack(spacing: 32) {
-                    Spacer().frame(height: 40)
+                VStack(spacing: 28) {
+                    Spacer().frame(height: 30)
 
-                    // App branding
-                    VStack(spacing: 16) {
-                        Image(systemName: "book.pages")
-                            .font(.system(size: 64))
-                            .foregroundStyle(Theme.accent)
+                    branding
 
-                        Text("PageFlow")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
+                    Spacer().frame(height: 4)
 
-                        Text("Read. Reflect. Grow.")
-                            .font(.title3)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
+                    formCard
 
-                    Spacer().frame(height: 20)
+                    dividerRow
 
-                    // Email/Password form
-                    VStack(spacing: 16) {
-                        TextField("Email", text: $email)
-                            .textContentType(.emailAddress)
-                            #if os(iOS)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            #endif
-                            .autocorrectionDisabled()
-                            .padding()
-                            .background(Theme.cardBackground)
-                            .foregroundStyle(Theme.textPrimary)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                        SecureField("Password", text: $password)
-                            .textContentType(isSignUp ? .newPassword : .password)
-                            .padding()
-                            .background(Theme.cardBackground)
-                            .foregroundStyle(Theme.textPrimary)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                        Button {
-                            submitEmailAuth()
-                        } label: {
-                            HStack {
-                                if isSubmitting {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text(isSignUp ? "Create Account" : "Sign In")
-                                        .font(.headline)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .background(Theme.accent)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        .disabled(email.isEmpty || password.isEmpty || isSubmitting)
-                        .opacity(email.isEmpty || password.isEmpty ? 0.6 : 1.0)
-
-                        Button {
-                            isSignUp.toggle()
-                            errorMessage = nil
-                        } label: {
-                            Text(isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up")
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.accentLight)
-                        }
-                    }
-                    .padding(.horizontal, 32)
-
-                    // Divider
-                    HStack {
-                        Rectangle()
-                            .fill(Theme.textMuted)
-                            .frame(height: 1)
-                        Text("or")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.textMuted)
-                        Rectangle()
-                            .fill(Theme.textMuted)
-                            .frame(height: 1)
-                    }
-                    .padding(.horizontal, 32)
-
-                    // Sign in with Apple
-                    VStack(spacing: 16) {
-                        SignInWithAppleButton(.signIn) { request in
-                            let nonce = AuthService.randomNonceString()
-                            currentNonce = nonce
-                            request.requestedScopes = [.fullName, .email]
-                            request.nonce = AuthService.sha256(nonce)
-                        } onCompletion: { result in
-                            handleSignInResult(result)
-                        }
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 52)
-                        .cornerRadius(12)
-                    }
-                    .padding(.horizontal, 32)
+                    appleButton
 
                     if let errorMessage {
                         Text(errorMessage)
-                            .font(.caption)
+                            .font(.dmSans(12))
                             .foregroundStyle(Theme.error)
+                            .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }
 
                     Spacer().frame(height: 40)
                 }
+                .padding(.horizontal, 24)
             }
         }
+    }
+
+    private var branding: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Theme.accent.opacity(0.18))
+                    .frame(width: 80, height: 80)
+                Image(systemName: "book.pages")
+                    .font(.system(size: 38))
+                    .foregroundStyle(Theme.accentLight)
+            }
+            .shadow(color: Theme.accentGlow, radius: 18)
+
+            Text("PageFlow")
+                .font(.playfair(40, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+
+            Text("Read. Reflect. Grow.")
+                .font(.dmSans(14))
+                .foregroundStyle(Theme.textSecondary)
+                .tracking(1.5)
+        }
+    }
+
+    private var formCard: some View {
+        VStack(spacing: 14) {
+            authField(placeholder: "Email", text: $email, isSecure: false)
+            authField(placeholder: "Password", text: $password, isSecure: true)
+
+            Button {
+                submitEmailAuth()
+            } label: {
+                HStack {
+                    if isSubmitting {
+                        ProgressView().tint(.white)
+                    } else {
+                        Text(isSignUp ? "Create Account" : "Sign In")
+                    }
+                }
+            }
+            .buttonStyle(PrimaryGradientButtonStyle(enabled: !email.isEmpty && !password.isEmpty && !isSubmitting))
+            .disabled(email.isEmpty || password.isEmpty || isSubmitting)
+
+            Button {
+                isSignUp.toggle()
+                errorMessage = nil
+            } label: {
+                Text(isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up")
+                    .font(.dmSans(13, weight: .medium))
+                    .foregroundStyle(Theme.accentLight)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+    }
+
+    @ViewBuilder
+    private func authField(placeholder: String, text: Binding<String>, isSecure: Bool) -> some View {
+        let base = Group {
+            if isSecure {
+                SecureField(placeholder, text: text)
+                    .textContentType(isSignUp ? .newPassword : .password)
+            } else {
+                TextField(placeholder, text: text)
+                    .textContentType(.emailAddress)
+                    #if os(iOS)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .autocorrectionDisabled()
+            }
+        }
+
+        base
+            .font(.dmSans(15))
+            .foregroundStyle(Theme.textPrimary)
+            .tint(Theme.accentLight)
+            .padding(14)
+            .designCard(cornerRadius: 14)
+    }
+
+    private var dividerRow: some View {
+        HStack(spacing: 12) {
+            Rectangle().fill(Theme.border).frame(height: 1)
+            Text("or")
+                .font(.dmSans(11, weight: .semibold))
+                .foregroundStyle(Theme.textMuted)
+                .tracking(1.5)
+            Rectangle().fill(Theme.border).frame(height: 1)
+        }
+    }
+
+    private var appleButton: some View {
+        SignInWithAppleButton(.signIn) { request in
+            let nonce = AuthService.randomNonceString()
+            currentNonce = nonce
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = AuthService.sha256(nonce)
+        } onCompletion: { result in
+            handleSignInResult(result)
+        }
+        .signInWithAppleButtonStyle(.white)
+        .frame(height: 52)
+        .cornerRadius(14)
     }
 
     private func submitEmailAuth() {

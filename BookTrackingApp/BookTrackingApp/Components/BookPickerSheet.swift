@@ -18,28 +18,27 @@ struct BookPickerSheet: View {
                 Theme.background.ignoresSafeArea()
 
                 if filteredBooks.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 40))
-                            .foregroundStyle(Theme.textMuted)
+                    VStack(spacing: 14) {
+                        Text("📚").font(.system(size: 38))
                         Text("No books found")
-                            .font(.subheadline)
+                            .font(.dmSans(14))
                             .foregroundStyle(Theme.textSecondary)
                     }
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        LazyVStack(spacing: 8) {
                             ForEach(filteredBooks) { book in
                                 Button {
                                     onSelect(book)
                                     dismiss()
                                 } label: {
-                                    BookCard(book: book)
+                                    pickerRow(book)
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding()
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
                     }
                 }
             }
@@ -51,9 +50,31 @@ struct BookPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentLight)
                 }
             }
         }
+    }
+
+    private func pickerRow(_ book: Book) -> some View {
+        HStack(spacing: 12) {
+            BookCoverView(book: book, size: .sm)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(book.title)
+                    .font(.dmSans(14, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                Text(book.author)
+                    .font(.dmSans(11))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.textMuted)
+        }
+        .padding(12)
+        .designCard(cornerRadius: 14)
     }
 }

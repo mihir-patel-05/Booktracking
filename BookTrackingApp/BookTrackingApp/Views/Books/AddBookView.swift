@@ -19,40 +19,9 @@ struct AddBookView: View {
             ZStack {
                 Theme.background.ignoresSafeArea()
 
-                Form {
-                    Section {
-                        TextField("Title", text: $title)
-                        TextField("Author", text: $author)
-                        TextField("Total Pages", text: $totalPages)
-                            #if os(iOS)
-                            .keyboardType(.numberPad)
-                            #endif
-                        TextField("Cover URL (optional)", text: $coverURL)
-                            #if os(iOS)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
-                            #endif
-                            .autocorrectionDisabled()
-                    }
-                    .listRowBackground(Theme.cardBackground)
-                    .foregroundStyle(Theme.textPrimary)
-
-                    Section("Status") {
-                        Picker("Status", selection: $selectedStatus) {
-                            ForEach(BookStatus.allCases, id: \.self) { status in
-                                Label(status.rawValue, systemImage: status.icon)
-                                    .tag(status)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .tint(Theme.accent)
-                    }
-                    .listRowBackground(Theme.cardBackground)
-                    .foregroundStyle(Theme.textPrimary)
-
-                    if let urlString = coverURL.isEmpty ? nil : coverURL,
-                       let url = URL(string: urlString) {
-                        Section("Cover Preview") {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        if !coverURL.isEmpty, let url = URL(string: coverURL) {
                             HStack {
                                 Spacer()
                                 AsyncImage(url: url) { phase in
@@ -63,14 +32,30 @@ struct AddBookView: View {
                                         ProgressView().tint(Theme.accent)
                                     }
                                 }
-                                .frame(height: 150)
+                                .frame(height: 180)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .shadow(color: .black.opacity(0.5), radius: 12, y: 8)
                                 Spacer()
                             }
                         }
-                        .listRowBackground(Theme.cardBackground)
+
+                        textCard(label: "Title", value: $title)
+                        textCard(label: "Author", value: $author)
+                        textCard(label: "Total Pages", value: $totalPages, keyboard: .number)
+                        textCard(label: "Cover URL (Optional)", value: $coverURL, keyboard: .url)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionLabel("Status", bottomPadding: 0)
+                            Picker("Status", selection: $selectedStatus) {
+                                ForEach(BookStatus.allCases, id: \.self) { status in
+                                    Text(status.rawValue).tag(status)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
                     }
+                    .padding(20)
                 }
-                .scrollContentBackground(.hidden)
             }
             .navigationTitle(prefill != nil ? "Add Book" : "New Book")
             #if os(iOS)
@@ -80,21 +65,57 @@ struct AddBookView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Theme.accentLight)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { saveBook() }
+                        .foregroundStyle(Theme.accentLight)
                         .disabled(!isValid)
                 }
             }
             .onAppear {
                 if let prefill {
-                    title = prefill.title
+                    title = prefill.volumeInfo.title
                     author = prefill.authorDisplay
                     totalPages = prefill.pageCount > 0 ? String(prefill.pageCount) : ""
                     coverURL = prefill.coverURL ?? ""
                 }
             }
         }
+    }
+
+    enum FieldKeyboard { case standard, number, url }
+
+    private func textCard(label: String, value: Binding<String>, keyboard: FieldKeyboard = .standard) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(label, bottomPadding: 0)
+            field(value: value, keyboard: keyboard)
+        }
+    }
+
+    @ViewBuilder
+    private func field(value: Binding<String>, keyboard: FieldKeyboard) -> some View {
+        let view = TextField("", text: value)
+            .font(.dmSans(14))
+            .foregroundStyle(Theme.textPrimary)
+            .tint(Theme.accentLight)
+            .padding(14)
+            .designCard(cornerRadius: 14)
+
+        #if os(iOS)
+        switch keyboard {
+        case .standard:
+            view
+        case .number:
+            view.keyboardType(.numberPad)
+        case .url:
+            view.keyboardType(.URL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+        }
+        #else
+        view
+        #endif
     }
 
     private var isValid: Bool {

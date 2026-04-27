@@ -1,8 +1,6 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - Timer Phase
-
 private enum TimerPhase {
     case setup
     case active
@@ -21,26 +19,21 @@ struct TimerView: View {
 
     @Query private var stats: [UserStats]
 
-    // Phase
     @State private var phase: TimerPhase = .setup
 
-    // Timer service (shared via environment for menu bar access)
     @Environment(TimerService.self) private var timerService
     @State private var customMinutesInput = ""
 
-    // Book selection
     @State private var selectedBook: Book?
 
-    // Platform-specific sizing
     #if os(macOS)
     private let timerCircleSize: CGFloat = 320
     private let controlButtonSize: CGFloat = 72
     #else
-    private let timerCircleSize: CGFloat = 220
+    private let timerCircleSize: CGFloat = 240
     private let controlButtonSize: CGFloat = 64
     #endif
 
-    // Post-session state
     @State private var sessionSaved = false
     @State private var earnedXP = 0
     @State private var savedSession: ReadingSession?
@@ -59,7 +52,7 @@ struct TimerView: View {
                     postSessionView
                 }
             }
-            .navigationTitle("Timer")
+            .navigationBarTitleDisplayMode(.inline)
             #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
@@ -90,191 +83,260 @@ struct TimerView: View {
 
     private var setupView: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                // Book Selection
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Select a Book")
-                        .font(.headline)
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Reading Timer")
+                        .font(.playfair(26, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
+                    Text("Focus on one book, one session.")
+                        .font(.dmSans(13))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .padding(.bottom, 22)
 
-                    if currentlyReadingBooks.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "book.closed")
-                                .font(.system(size: 32))
-                                .foregroundStyle(Theme.textMuted)
-                            Text("No books currently being read")
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.textSecondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(24)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(currentlyReadingBooks) { book in
-                                    Button {
-                                        selectedBook = book
-                                    } label: {
-                                        BookCard(book: book, compact: true)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .strokeBorder(
-                                                        selectedBook?.id == book.id ? Theme.accent : Color.clear,
-                                                        lineWidth: 2
-                                                    )
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+                SectionLabel("Select Book")
+                if currentlyReadingBooks.isEmpty {
+                    emptyBookCard
+                        .padding(.bottom, 24)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(currentlyReadingBooks) { book in
+                                bookSelectorCard(book)
                             }
                         }
+                        .padding(.bottom, 2)
                     }
+                    .padding(.bottom, 24)
                 }
 
-                // Timer Presets
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Duration")
-                        .font(.headline)
-                        .foregroundStyle(Theme.textPrimary)
-
-                    HStack(spacing: 10) {
-                        ForEach(TimerPreset.allCases, id: \.self) { preset in
-                            Button {
-                                timerService.selectPreset(preset)
-                                customMinutesInput = ""
-                            } label: {
-                                Text(preset.label)
-                                    .font(.subheadline.bold())
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(timerService.selectedPreset == preset ? Theme.accent : Theme.cardBackground)
-                                    .foregroundStyle(timerService.selectedPreset == preset ? .white : Theme.textSecondary)
-                                    .clipShape(Capsule())
-                            }
-                        }
-                    }
-
-                    // Custom time
-                    HStack(spacing: 8) {
-                        TextField("Custom", text: $customMinutesInput)
-                            #if os(iOS)
-                            .keyboardType(.numberPad)
-                            #endif
-                            .foregroundStyle(Theme.textPrimary)
-                            .padding(12)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-
+                SectionLabel("Duration")
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+                    ForEach(TimerPreset.allCases, id: \.self) { preset in
+                        let selected = timerService.selectedPreset == preset
                         Button {
-                            timerService.setCustomMinutes(customMinutesInput)
+                            timerService.selectPreset(preset)
+                            customMinutesInput = ""
                         } label: {
-                            Text("Set")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 12)
-                                .background(Theme.accent)
-                                .clipShape(Capsule())
+                            Text(preset.label)
+                                .font(.dmSans(14, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 11)
+                                .background(selected ? Theme.accent.opacity(0.20) : Theme.cardBackground)
+                                .foregroundStyle(selected ? Theme.accentLight : Theme.textSecondary)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(selected ? Theme.accent : .clear, lineWidth: 2)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(.bottom, 14)
 
-                // Start Button
+                HStack(spacing: 8) {
+                    TextField("Custom (mins)", text: $customMinutesInput)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .font(.dmSans(14))
+                        .foregroundStyle(Theme.textPrimary)
+                        .tint(Theme.accentLight)
+                        .padding(12)
+                        .designCard(cornerRadius: 12)
+
+                    Button {
+                        timerService.setCustomMinutes(customMinutesInput)
+                    } label: {
+                        Text("Set")
+                            .font(.dmSans(14, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Theme.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.bottom, 18)
+
+                if let book = selectedBook {
+                    sessionPreview(book: book)
+                        .padding(.bottom, 18)
+                }
+
                 Button {
                     startTimer()
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "play.fill")
-                        Text("Start Session")
-                            .font(.headline)
+                        if selectedBook != nil {
+                            Image(systemName: "play.fill")
+                            Text("Start Session")
+                        } else {
+                            Text("Select a book to begin")
+                        }
                     }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(selectedBook != nil ? Theme.accent : Theme.cardBackgroundLight)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
+                .buttonStyle(PrimaryGradientButtonStyle(enabled: selectedBook != nil))
                 .disabled(selectedBook == nil)
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 28)
         }
+    }
+
+    private var emptyBookCard: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "book.closed")
+                .font(.system(size: 32))
+                .foregroundStyle(Theme.textMuted)
+            Text("No books currently being read")
+                .font(.dmSans(14))
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(24)
+        .designCard(cornerRadius: 14)
+    }
+
+    private func bookSelectorCard(_ book: Book) -> some View {
+        let selected = selectedBook?.id == book.id
+        return Button {
+            selectedBook = book
+        } label: {
+            VStack(alignment: .leading, spacing: 9) {
+                BookCoverView(book: book, size: .sm)
+                Text(book.title)
+                    .font(.dmSans(12, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(2)
+                Text(book.author)
+                    .font(.dmSans(10))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
+            .padding(12)
+            .frame(width: 124, alignment: .leading)
+            .background(selected ? Theme.accent.opacity(0.18) : Theme.cardBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(selected ? Theme.accent : Theme.border, lineWidth: 2)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func sessionPreview(book: Book) -> some View {
+        HStack(spacing: 12) {
+            BookCoverView(book: book, size: .sm)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(book.title)
+                    .font(.dmSans(14, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                Text("\(Int(book.progressPercentage * 100))% complete · \(timerService.totalSeconds / 60) min session")
+                    .font(.dmSans(11))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 14)
+        .padding(.horizontal, 16)
+        .designCard(cornerRadius: 14)
     }
 
     // MARK: - Active View
 
     private var activeView: some View {
-        VStack(spacing: 32) {
-            // Book info
+        VStack(spacing: 0) {
             if let book = selectedBook {
                 HStack(spacing: 10) {
-                    Image(systemName: "book.fill")
-                        .foregroundStyle(Theme.accent)
-                    Text(book.title)
-                        .font(.subheadline.bold())
-                        .foregroundStyle(Theme.textPrimary)
-                        .lineLimit(1)
+                    BookCoverView(book: book, size: .sm)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(book.title)
+                            .font(.dmSans(13, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineLimit(1)
+                        Text("Focus session · \(timerService.totalSeconds / 60)m")
+                            .font(.dmSans(11))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                    Text(timerService.isRunning ? "● Live" : "⏸ Paused")
+                        .font(.dmSans(12, weight: .semibold))
+                        .foregroundStyle(timerService.isRunning ? Theme.success : Theme.streak)
                 }
-                .padding(12)
-                .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(10)
+                .designCard(cornerRadius: 12)
+                .padding(.horizontal, 24)
+                .padding(.top, 30)
             }
 
             Spacer()
 
-            // Circular Timer
             ZStack {
                 Circle()
-                    .stroke(Theme.cardBackgroundLight, lineWidth: 8)
+                    .stroke(Theme.cardBackgroundLight, lineWidth: 10)
                     .frame(width: timerCircleSize, height: timerCircleSize)
 
                 Circle()
                     .trim(from: 0, to: timerService.progress)
-                    .stroke(Theme.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .stroke(Theme.accent, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .frame(width: timerCircleSize, height: timerCircleSize)
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: timerService.progress)
+                    .shadow(color: Theme.accent.opacity(0.6), radius: 8)
+                    .animation(.linear(duration: 0.8), value: timerService.progress)
 
-                VStack(spacing: 4) {
+                VStack(spacing: 8) {
                     Text(timerService.formattedTime)
-                        .font(.system(size: 48, weight: .bold, design: .monospaced))
+                        .font(.dmSans(48, weight: .light))
                         .foregroundStyle(Theme.textPrimary)
+                        .tracking(-1)
                     Text("remaining")
-                        .font(.caption)
+                        .font(.dmSans(12))
                         .foregroundStyle(Theme.textMuted)
                 }
             }
 
             Spacer()
 
-            // Controls
             HStack(spacing: 24) {
                 Button {
                     togglePause()
                 } label: {
                     Image(systemName: timerService.isRunning ? "pause.fill" : "play.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white)
+                        .font(.system(size: 22))
+                        .foregroundStyle(Theme.accentLight)
                         .frame(width: controlButtonSize, height: controlButtonSize)
-                        .background(Theme.accent)
+                        .background(Theme.accent.opacity(0.15))
+                        .overlay(
+                            Circle().stroke(Theme.accent, lineWidth: 2)
+                        )
                         .clipShape(Circle())
+                        .shadow(color: Theme.accentGlow, radius: 14)
                 }
+                .buttonStyle(.plain)
 
                 Button {
                     stopTimer()
                 } label: {
                     Image(systemName: "stop.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white)
+                        .font(.system(size: 22))
+                        .foregroundStyle(Theme.error)
                         .frame(width: controlButtonSize, height: controlButtonSize)
-                        .background(Theme.error)
+                        .background(Theme.error.opacity(0.10))
+                        .overlay(
+                            Circle().stroke(Theme.error.opacity(0.5), lineWidth: 2)
+                        )
                         .clipShape(Circle())
                 }
+                .buttonStyle(.plain)
             }
             .padding(.bottom, 40)
         }
-        .padding()
     }
 
     // MARK: - Post Session View
@@ -282,38 +344,7 @@ struct TimerView: View {
     @ViewBuilder
     private var postSessionView: some View {
         if sessionSaved {
-            ScrollView {
-                VStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(Theme.success)
-
-                    Text("Session Saved!")
-                        .font(.title2.bold())
-                        .foregroundStyle(Theme.textPrimary)
-
-                    Text("+\(earnedXP) XP")
-                        .font(.title.bold())
-                        .foregroundStyle(Theme.accent)
-
-                    Button {
-                        resetToSetup()
-                    } label: {
-                        Text("Done")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Theme.accent)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .padding(.top, 8)
-                }
-                .padding()
-                .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding()
-            }
+            xpRewardView
         } else if let book = selectedBook {
             JournalFlowView(
                 book: book,
@@ -325,6 +356,36 @@ struct TimerView: View {
                     withAnimation { sessionSaved = true }
                 }
             )
+        }
+    }
+
+    private var xpRewardView: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            Text("🎉").font(.system(size: 56))
+                .padding(.bottom, 12)
+            Text("+\(earnedXP) XP")
+                .font(.playfair(32, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+                .padding(.bottom, 4)
+            Text("Session saved to your library")
+                .font(.dmSans(14))
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.bottom, 28)
+
+            Button {
+                resetToSetup()
+            } label: {
+                Text("Done")
+                    .font(.dmSans(15, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .designCard(cornerRadius: 14)
+            .padding(.horizontal, 28)
+
+            Spacer()
         }
     }
 

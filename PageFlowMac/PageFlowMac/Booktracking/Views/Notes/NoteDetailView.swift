@@ -2,7 +2,10 @@ import SwiftUI
 import SwiftData
 
 struct NoteDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Bindable var note: SessionNote
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         ZStack {
@@ -91,5 +94,23 @@ struct NoteDetailView: View {
             .frame(maxWidth: .infinity)
         }
         .navigationTitle("Note")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    Image(systemName: "trash")
+                }
+            }
+        }
+        .confirmationDialog("Delete this note?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete Note", role: .destructive) {
+                modelContext.delete(note)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will remove the note from your saved notes.")
+        }
     }
 }
