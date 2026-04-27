@@ -8,6 +8,7 @@ struct NotesView: View {
     @State private var searchText = ""
     @State private var selectedBookFilter: Book?
     @State private var expandedNoteID: UUID?
+    @State private var notePendingDeletion: SessionNote?
 
     private var uniqueBooks: [Book] {
         var seen = Set<UUID>()
@@ -101,6 +102,22 @@ struct NotesView: View {
             .sheet(isPresented: $showAddNote) {
                 AddNoteView()
             }
+            .confirmationDialog("Delete this note?", isPresented: Binding(
+                get: { notePendingDeletion != nil },
+                set: { if !$0 { notePendingDeletion = nil } }
+            ), titleVisibility: .visible) {
+                Button("Delete Note", role: .destructive) {
+                    if let notePendingDeletion {
+                        modelContext.delete(notePendingDeletion)
+                    }
+                    notePendingDeletion = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    notePendingDeletion = nil
+                }
+            } message: {
+                Text("This will remove the note from your saved notes.")
+            }
         }
     }
 
@@ -152,70 +169,84 @@ struct NotesView: View {
 
     private func noteCard(_ note: SessionNote) -> some View {
         let isOpen = expandedNoteID == note.id
-        return Button {
-            withAnimation(.easeInOut(duration: 0.35)) {
-                expandedNoteID = isOpen ? nil : note.id
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 8) {
-                    Text(note.title)
-                        .font(.dmSans(14, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(2)
-                    Spacer(minLength: 8)
-                    Image(systemName: isOpen ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Theme.textMuted)
-                        .padding(.top, 2)
-                }
-
-                Text(note.content)
-                    .font(.dmSans(13))
-                    .foregroundStyle(Theme.textSecondary)
-                    .lineSpacing(4)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 8) {
+                Text(note.title)
+                    .font(.dmSans(14, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(isOpen ? nil : 2)
+                    .lineLimit(2)
+                Spacer(minLength: 8)
+                Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textMuted)
+                    .padding(.top, 2)
+            }
 
-                HStack(spacing: 5) {
-                    ForEach(note.tags.prefix(4), id: \.self) { tag in
-                        Chip(label: "#\(tag)", color: Theme.accentLight)
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 1) {
-                        if let book = note.book {
-                            let trimmed = book.title.split(separator: " ").prefix(2).joined(separator: " ")
-                            Text(trimmed)
-                                .font(.dmSans(11, weight: .semibold))
-                                .foregroundStyle(Theme.accentLight)
-                                .lineLimit(1)
-                        }
-                        Text(note.dateCreated.formatted(.dateTime.month(.abbreviated).day()))
-                            .font(.dmSans(10))
-                            .foregroundStyle(Theme.textMuted)
-                    }
+            Text(note.content)
+                .font(.dmSans(13))
+                .foregroundStyle(Theme.textSecondary)
+                .lineSpacing(4)
+                .multilineTextAlignment(.leading)
+                .lineLimit(isOpen ? nil : 2)
+
+            HStack(spacing: 5) {
+                ForEach(note.tags.prefix(4), id: \.self) { tag in
+                    Chip(label: "#\(tag)", color: Theme.accentLight)
                 }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 1) {
+                    if let book = note.book {
+                        let trimmed = book.title.split(separator: " ").prefix(2).joined(separator: " ")
+                        Text(trimmed)
+                            .font(.dmSans(11, weight: .semibold))
+                            .foregroundStyle(Theme.accentLight)
+                            .lineLimit(1)
+                    }
+                    Text(note.dateCreated.formatted(.dateTime.month(.abbreviated).day()))
+                        .font(.dmSans(10))
+                        .foregroundStyle(Theme.textMuted)
+                }
+            }
 
-                if isOpen {
+            if isOpen {
+                HStack(spacing: 10) {
                     NavigationLink(value: note) {
                         HStack(spacing: 6) {
-                            Text("Open note")
+                            Text("Edit note")
                                 .font(.dmSans(11, weight: .semibold))
-                            Image(systemName: "arrow.up.right")
+                            Image(systemName: "pencil")
                                 .font(.system(size: 9, weight: .semibold))
                         }
                         .foregroundStyle(Theme.accentLight)
                     }
                     .buttonStyle(.plain)
-                    .padding(.top, 2)
+
+                    Button(role: .destructive) {
+                        notePendingDeletion = note
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("Delete")
+                                .font(.dmSans(11, weight: .semibold))
+                            Image(systemName: "trash")
+                                .font(.system(size: 9, weight: .semibold))
+                        }
+                        .foregroundStyle(.red.opacity(0.85))
+                    }
+                    .buttonStyle(.plain)
                 }
+                .padding(.top, 2)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .designCard(cornerRadius: 16, borderColor: isOpen ? Theme.accent.opacity(0.4) : Theme.border)
         }
-        .buttonStyle(.plain)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .designCard(cornerRadius: 16, borderColor: isOpen ? Theme.accent.opacity(0.4) : Theme.border)
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                expandedNoteID = isOpen ? nil : note.id
+            }
+        }
     }
 
     // MARK: - Empty State

@@ -7,6 +7,7 @@ struct NotesView: View {
     @State private var showAddNote = false
     @State private var searchText = ""
     @State private var selectedBookFilter: Book?
+    @State private var notePendingDeletion: SessionNote?
 
     private var uniqueBooks: [Book] {
         var seen = Set<UUID>()
@@ -39,7 +40,6 @@ struct NotesView: View {
                 emptyState
             } else {
                 VStack(spacing: 0) {
-                    // Book filter pills
                     if !uniqueBooks.isEmpty {
                         bookFilterPills
                     }
@@ -47,17 +47,14 @@ struct NotesView: View {
                     ScrollView {
                         LazyVStack(spacing: 12) {
                             ForEach(filteredNotes) { note in
-                                NavigationLink(value: note) {
-                                    noteCard(note)
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        modelContext.delete(note)
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
+                                noteCard(note)
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            notePendingDeletion = note
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
                                     }
-                                }
                             }
                         }
                         .padding()
@@ -83,12 +80,26 @@ struct NotesView: View {
         .sheet(isPresented: $showAddNote) {
             AddNoteView()
         }
+        .confirmationDialog("Delete this note?", isPresented: Binding(
+            get: { notePendingDeletion != nil },
+            set: { if !$0 { notePendingDeletion = nil } }
+        ), titleVisibility: .visible) {
+            Button("Delete Note", role: .destructive) {
+                if let notePendingDeletion {
+                    modelContext.delete(notePendingDeletion)
+                }
+                notePendingDeletion = nil
+            }
+            Button("Cancel", role: .cancel) {
+                notePendingDeletion = nil
+            }
+        } message: {
+            Text("This will remove the note from your saved notes.")
+        }
         .onReceive(NotificationCenter.default.publisher(for: .addNewNote)) { _ in
             showAddNote = true
         }
     }
-
-    // MARK: - Book Filter Pills
 
     private var bookFilterPills: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -125,8 +136,6 @@ struct NotesView: View {
         }
     }
 
-    // MARK: - Note Card
-
     private func noteCard(_ note: SessionNote) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(note.title)
@@ -151,13 +160,28 @@ struct NotesView: View {
                     .font(.caption2)
                     .foregroundStyle(Theme.textMuted)
             }
+
+            HStack(spacing: 12) {
+                NavigationLink(value: note) {
+                    Label("Edit", systemImage: "pencil")
+                        .font(.caption.bold())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.accentLight)
+
+                Button(role: .destructive) {
+                    notePendingDeletion = note
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                        .font(.caption.bold())
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(12)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-
-    // MARK: - Empty State
 
     private var emptyState: some View {
         VStack(spacing: 20) {

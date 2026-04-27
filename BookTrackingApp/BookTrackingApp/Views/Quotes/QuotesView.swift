@@ -7,6 +7,8 @@ struct QuotesView: View {
     @State private var showAddQuote = false
     @State private var searchText = ""
     @State private var featuredIndex = 0
+    @State private var editingQuote: Quote?
+    @State private var quotePendingDeletion: Quote?
 
     private var filteredQuotes: [Quote] {
         guard !searchText.isEmpty else { return quotes }
@@ -47,14 +49,38 @@ struct QuotesView: View {
 
                             VStack(spacing: 10) {
                                 ForEach(filteredQuotes) { quote in
-                                    QuoteCard(quote: quote)
-                                        .contextMenu {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        QuoteCard(quote: quote)
+                                            .contextMenu {
+                                                Button {
+                                                    editingQuote = quote
+                                                } label: {
+                                                    Label("Edit", systemImage: "pencil")
+                                                }
+                                                Button(role: .destructive) {
+                                                    quotePendingDeletion = quote
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
+                                            }
+
+                                        HStack(spacing: 12) {
+                                            Button {
+                                                editingQuote = quote
+                                            } label: {
+                                                Label("Edit", systemImage: "pencil")
+                                            }
+                                            .buttonStyle(QuoteActionButtonStyle())
+
                                             Button(role: .destructive) {
-                                                modelContext.delete(quote)
+                                                quotePendingDeletion = quote
                                             } label: {
                                                 Label("Delete", systemImage: "trash")
                                             }
+                                            .buttonStyle(QuoteActionButtonStyle(color: .red))
                                         }
+                                        .padding(.horizontal, 4)
+                                    }
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -79,6 +105,25 @@ struct QuotesView: View {
             }
             .sheet(isPresented: $showAddQuote) {
                 AddQuoteView()
+            }
+            .sheet(item: $editingQuote) { quote in
+                EditQuoteView(quote: quote)
+            }
+            .confirmationDialog("Delete this quote?", isPresented: Binding(
+                get: { quotePendingDeletion != nil },
+                set: { if !$0 { quotePendingDeletion = nil } }
+            ), titleVisibility: .visible) {
+                Button("Delete Quote", role: .destructive) {
+                    if let quotePendingDeletion {
+                        modelContext.delete(quotePendingDeletion)
+                    }
+                    quotePendingDeletion = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    quotePendingDeletion = nil
+                }
+            } message: {
+                Text("This will remove the quote from your saved quotes.")
             }
         }
     }
@@ -190,6 +235,96 @@ struct QuotesView: View {
             .frame(maxWidth: 220)
             .padding(.top, 6)
         }
+    }
+}
+
+private struct EditQuoteView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var quote: Quote
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.background.ignoresSafeArea()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        if let book = quote.book {
+                            HStack(spacing: 12) {
+                                BookCoverView(book: book, size: .sm)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(book.title)
+                                        .font(.dmSans(14, weight: .semibold))
+                                        .foregroundStyle(Theme.accentLight)
+                                        .lineLimit(1)
+                                    Text(book.author)
+                                        .font(.dmSans(11))
+                                        .foregroundStyle(Theme.textSecondary)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                            }
+                            .padding(12)
+                            .designCard(cornerRadius: 14)
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionLabel("Quote", bottomPadding: 0)
+                            TextEditor(text: $quote.text)
+                                .scrollContentBackground(.hidden)
+                                .font(.playfair(15, weight: .regular))
+                                .italic()
+                                .foregroundStyle(Theme.textPrimary)
+                                .tint(Theme.accentLight)
+                                .frame(minHeight: 160)
+                                .padding(10)
+                                .designCard(cornerRadius: 14)
+                                .onChange(of: quote.text) {
+                                    quote.needsSync = true
+                                }
+                        }
+
+                        HStack {
+                            Spacer()
+                            Text("Created \(quote.dateCreated.formatted(date: .abbreviated, time: .shortened))")
+                                .font(.dmSans(11))
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                    }
+                    .padding(20)
+                }
+            }
+            .navigationTitle("Edit Quote")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        quote.text = quote.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        quote.needsSync = true
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accentLight)
+                    .disabled(quote.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+}
+
+private struct QuoteActionButtonStyle: ButtonStyle {
+    var color: Color = Theme.accentLight
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.dmSans(11, weight: .semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(color.opacity(configuration.isPressed ? 0.22 : 0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
