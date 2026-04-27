@@ -169,7 +169,7 @@ private struct SearchResultRow: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(doc.title)
+                Text(doc.volumeInfo.title)
                     .font(.subheadline.bold())
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(2)

@@ -13,85 +13,71 @@ struct BookCard: View {
     }
 
     private var fullLayout: some View {
-        HStack(spacing: 12) {
-            coverImage(width: 50, height: 75)
+        HStack(spacing: 14) {
+            BookCoverView(book: book, size: .sm)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
-                    .font(.subheadline.bold())
+                    .font(.dmSans(14, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
 
                 Text(book.author)
-                    .font(.caption)
+                    .font(.dmSans(11))
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
 
                 if book.status == .currentlyReading {
-                    ProgressBar(progress: book.progressPercentage)
+                    ProgressBarV2(value: book.progressPercentage, height: 4)
                         .padding(.top, 4)
 
                     Text("\(book.currentPage)/\(book.totalPages) pages")
-                        .font(.caption2)
+                        .font(.dmSans(10))
                         .foregroundStyle(Theme.textMuted)
                 } else {
                     Text(book.status.rawValue)
-                        .font(.caption2)
+                        .font(.dmSans(10))
                         .foregroundStyle(Theme.textMuted)
                 }
             }
 
             Spacer()
         }
-        .padding(12)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(14)
+        .designCard(cornerRadius: 14)
     }
 
     private var compactLayout: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            coverImage(width: 80, height: 120)
+        VStack(alignment: .leading, spacing: 11) {
+            BookCoverView(book: book, size: .md)
 
-            Text(book.title)
-                .font(.caption.bold())
-                .foregroundStyle(Theme.textPrimary)
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(book.title)
+                    .font(.dmSans(13, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(2)
+
+                Text(book.author)
+                    .font(.dmSans(11))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
 
             if book.status == .currentlyReading {
-                ProgressBar(progress: book.progressPercentage, height: 4)
-            }
-        }
-        .frame(width: 100)
-        .padding(8)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func coverImage(width: CGFloat, height: CGFloat) -> some View {
-        Group {
-            if let urlString = book.coverURL, let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    default:
-                        coverPlaceholder
-                    }
+                ProgressBarV2(value: book.progressPercentage, height: 4)
+                HStack {
+                    Text("\(Int(book.progressPercentage * 100))%")
+                        .font(.dmSans(11, weight: .semibold))
+                        .foregroundStyle(Theme.accentLight)
+                    Spacer()
+                    Text("\(book.notes.count) notes")
+                        .font(.dmSans(11))
+                        .foregroundStyle(Theme.textMuted)
                 }
-            } else {
-                coverPlaceholder
             }
         }
-        .frame(width: width, height: height)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-    }
-
-    private var coverPlaceholder: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(Theme.cardBackgroundLight)
-            .overlay(
-                Image(systemName: "book.closed.fill")
-                    .foregroundStyle(Theme.textMuted)
-            )
+        .frame(width: 155, alignment: .leading)
+        .padding(14)
+        .designCard(cornerRadius: 18)
     }
 }

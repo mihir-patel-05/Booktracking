@@ -88,7 +88,7 @@ struct AddBookView: View {
             }
             .onAppear {
                 if let prefill {
-                    title = prefill.title
+                    title = prefill.volumeInfo.title
                     author = prefill.authorDisplay
                     totalPages = prefill.pageCount > 0 ? String(prefill.pageCount) : ""
                     coverURL = prefill.coverURL ?? ""

@@ -5,22 +5,26 @@ struct StatCard: View {
     let value: String
     let icon: String
     var iconColor: Color = Theme.accent
+    var emoji: String? = nil
 
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(iconColor)
+        VStack(alignment: .leading, spacing: 6) {
+            if let emoji {
+                Text(emoji).font(.system(size: 20))
+            } else {
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundStyle(iconColor)
+            }
             Text(value)
-                .font(.title3.bold())
-                .foregroundStyle(Theme.textPrimary)
+                .font(.playfair(22, weight: .bold))
+                .foregroundStyle(iconColor)
             Text(title)
-                .font(.caption)
+                .font(.dmSans(10))
                 .foregroundStyle(Theme.textSecondary)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .designCard(cornerRadius: 14)
     }
 }
