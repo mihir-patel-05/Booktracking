@@ -9,61 +9,37 @@ struct NoteDetailView: View {
             Theme.background.ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Book Info
+                VStack(alignment: .leading, spacing: 18) {
                     if let book = note.book {
-                        HStack(spacing: 8) {
-                            Image(systemName: "book.fill")
-                                .foregroundStyle(Theme.accent)
-                            Text(book.title)
-                                .font(.subheadline.bold())
-                                .foregroundStyle(Theme.accentLight)
-                        }
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        bookCard(book: book)
                     }
 
-                    // Title
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Title")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(Theme.textSecondary)
-
+                        SectionLabel("Title", bottomPadding: 0)
                         TextField("Note title", text: $note.title)
+                            .font(.dmSans(15, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
-                            .padding(12)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .onChange(of: note.title) {
-                                note.needsSync = true
-                            }
+                            .tint(Theme.accentLight)
+                            .padding(14)
+                            .designCard(cornerRadius: 14)
+                            .onChange(of: note.title) { note.needsSync = true }
                     }
 
-                    // Content
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Content")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(Theme.textSecondary)
-
+                        SectionLabel("Content", bottomPadding: 0)
                         TextEditor(text: $note.content)
                             .scrollContentBackground(.hidden)
+                            .font(.dmSans(14))
                             .foregroundStyle(Theme.textPrimary)
+                            .tint(Theme.accentLight)
                             .frame(minHeight: 200)
-                            .padding(12)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .onChange(of: note.content) {
-                                note.needsSync = true
-                            }
+                            .padding(10)
+                            .designCard(cornerRadius: 14)
+                            .onChange(of: note.content) { note.needsSync = true }
                     }
 
-                    // Chapter Reference
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Chapter Reference")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(Theme.textSecondary)
-
+                        SectionLabel("Chapter Reference", bottomPadding: 0)
                         TextField("e.g. Chapter 3", text: Binding(
                             get: { note.chapterReference ?? "" },
                             set: {
@@ -71,21 +47,21 @@ struct NoteDetailView: View {
                                 note.needsSync = true
                             }
                         ))
+                        .font(.dmSans(14))
                         .foregroundStyle(Theme.textPrimary)
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .tint(Theme.accentLight)
+                        .padding(14)
+                        .designCard(cornerRadius: 14)
                     }
 
-                    // Date
                     HStack {
                         Spacer()
                         Text("Created \(note.dateCreated.formatted(date: .abbreviated, time: .shortened))")
-                            .font(.caption)
+                            .font(.dmSans(11))
                             .foregroundStyle(Theme.textMuted)
                     }
                 }
-                .padding()
+                .padding(20)
             }
         }
         .navigationTitle("Note")
@@ -93,5 +69,24 @@ struct NoteDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
         #endif
+    }
+
+    private func bookCard(book: Book) -> some View {
+        HStack(spacing: 12) {
+            BookCoverView(book: book, size: .sm)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(book.title)
+                    .font(.dmSans(14, weight: .semibold))
+                    .foregroundStyle(Theme.accentLight)
+                    .lineLimit(1)
+                Text(book.author)
+                    .font(.dmSans(11))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+        }
+        .padding(12)
+        .designCard(cornerRadius: 14)
     }
 }

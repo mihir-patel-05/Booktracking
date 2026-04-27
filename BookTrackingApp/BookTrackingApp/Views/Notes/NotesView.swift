@@ -7,6 +7,7 @@ struct NotesView: View {
     @State private var showAddNote = false
     @State private var searchText = ""
     @State private var selectedBookFilter: Book?
+    @State private var expandedNoteID: UUID?
 
     private var uniqueBooks: [Book] {
         var seen = Set<UUID>()
@@ -39,38 +40,51 @@ struct NotesView: View {
                 if notes.isEmpty {
                     emptyState
                 } else {
-                    VStack(spacing: 0) {
-                        // Book filter pills
+                    VStack(alignment: .leading, spacing: 0) {
+                        header
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+
+                        searchBar
+                            .padding(.horizontal, 20)
+                            .padding(.top, 12)
+
                         if !uniqueBooks.isEmpty {
                             bookFilterPills
+                                .padding(.top, 12)
                         }
 
+                        countLabel
+                            .padding(.horizontal, 20)
+                            .padding(.top, 8)
+                            .padding(.bottom, 12)
+
                         ScrollView {
-                            LazyVStack(spacing: 12) {
+                            LazyVStack(spacing: 9) {
                                 ForEach(filteredNotes) { note in
-                                    NavigationLink(value: note) {
-                                        noteCard(note)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            modelContext.delete(note)
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
+                                    noteCard(note)
+                                        .contextMenu {
+                                            Button(role: .destructive) {
+                                                modelContext.delete(note)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                            NavigationLink(value: note) {
+                                                Label("Open", systemImage: "arrow.up.right.square")
+                                            }
                                         }
-                                    }
                                 }
                             }
-                            .padding()
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
                         }
                     }
                 }
             }
-            .navigationTitle("Notes")
+            .navigationBarTitleDisplayMode(.inline)
             #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
-            .searchable(text: $searchText, prompt: "Search notes...")
             .navigationDestination(for: SessionNote.self) { note in
                 NoteDetailView(note: note)
             }
@@ -80,7 +94,7 @@ struct NotesView: View {
                         showAddNote = true
                     } label: {
                         Image(systemName: "plus")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentLight)
                     }
                 }
             }
@@ -90,92 +104,140 @@ struct NotesView: View {
         }
     }
 
-    // MARK: - Book Filter Pills
+    private var header: some View {
+        Text("Notes")
+            .font(.playfair(26, weight: .bold))
+            .foregroundStyle(Theme.textPrimary)
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.textMuted)
+            TextField("Search notes...", text: $searchText)
+                .font(.dmSans(14))
+                .foregroundStyle(Theme.textPrimary)
+                .tint(Theme.accentLight)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .designCard(cornerRadius: 12)
+    }
 
     private var bookFilterPills: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                Button {
+            HStack(spacing: 7) {
+                FilterPill(label: "All", isSelected: selectedBookFilter == nil) {
                     selectedBookFilter = nil
-                } label: {
-                    Text("All")
-                        .font(.caption.bold())
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(selectedBookFilter == nil ? Theme.accent : Theme.cardBackground)
-                        .foregroundStyle(selectedBookFilter == nil ? .white : Theme.textSecondary)
-                        .clipShape(Capsule())
                 }
-
                 ForEach(uniqueBooks) { book in
-                    Button {
+                    let trimmed = book.title.split(separator: " ").prefix(2).joined(separator: " ")
+                    FilterPill(label: trimmed, isSelected: selectedBookFilter?.id == book.id) {
                         selectedBookFilter = book
-                    } label: {
-                        Text(book.title)
-                            .font(.caption.bold())
-                            .lineLimit(1)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(selectedBookFilter?.id == book.id ? Theme.accent : Theme.cardBackground)
-                            .foregroundStyle(selectedBookFilter?.id == book.id ? .white : Theme.textSecondary)
-                            .clipShape(Capsule())
                     }
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 20)
         }
+    }
+
+    private var countLabel: some View {
+        Text("\(filteredNotes.count) note\(filteredNotes.count == 1 ? "" : "s")")
+            .font(.dmSans(11))
+            .foregroundStyle(Theme.textMuted)
     }
 
     // MARK: - Note Card
 
     private func noteCard(_ note: SessionNote) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(note.title)
-                .font(.subheadline.bold())
-                .foregroundStyle(Theme.textPrimary)
-                .lineLimit(1)
-
-            Text(note.content)
-                .font(.caption)
-                .foregroundStyle(Theme.textSecondary)
-                .lineLimit(2)
-
-            HStack {
-                if let book = note.book {
-                    Text(book.title)
-                        .font(.caption2.bold())
-                        .foregroundStyle(Theme.accentLight)
-                        .lineLimit(1)
-                }
-                Spacer()
-                Text(note.dateCreated.formatted(date: .abbreviated, time: .omitted))
-                    .font(.caption2)
-                    .foregroundStyle(Theme.textMuted)
+        let isOpen = expandedNoteID == note.id
+        return Button {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                expandedNoteID = isOpen ? nil : note.id
             }
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 8) {
+                    Text(note.title)
+                        .font(.dmSans(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                    Spacer(minLength: 8)
+                    Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.textMuted)
+                        .padding(.top, 2)
+                }
+
+                Text(note.content)
+                    .font(.dmSans(13))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineSpacing(4)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(isOpen ? nil : 2)
+
+                HStack(spacing: 5) {
+                    ForEach(note.tags.prefix(4), id: \.self) { tag in
+                        Chip(label: "#\(tag)", color: Theme.accentLight)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 1) {
+                        if let book = note.book {
+                            let trimmed = book.title.split(separator: " ").prefix(2).joined(separator: " ")
+                            Text(trimmed)
+                                .font(.dmSans(11, weight: .semibold))
+                                .foregroundStyle(Theme.accentLight)
+                                .lineLimit(1)
+                        }
+                        Text(note.dateCreated.formatted(.dateTime.month(.abbreviated).day()))
+                            .font(.dmSans(10))
+                            .foregroundStyle(Theme.textMuted)
+                    }
+                }
+
+                if isOpen {
+                    NavigationLink(value: note) {
+                        HStack(spacing: 6) {
+                            Text("Open note")
+                                .font(.dmSans(11, weight: .semibold))
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 9, weight: .semibold))
+                        }
+                        .foregroundStyle(Theme.accentLight)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .designCard(cornerRadius: 16, borderColor: isOpen ? Theme.accent.opacity(0.4) : Theme.border)
         }
-        .padding(12)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .buttonStyle(.plain)
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "note.text")
-                .font(.system(size: 48))
-                .foregroundStyle(Theme.accent)
-
+        VStack(spacing: 18) {
+            Text("📝").font(.system(size: 48))
             Text("No Notes Yet")
-                .font(.title2.bold())
+                .font(.playfair(22, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
-
             Text("Capture your thoughts and insights from reading sessions.")
-                .font(.subheadline)
+                .font(.dmSans(14))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+
+            Button { showAddNote = true } label: {
+                Text("Add a note")
+            }
+            .buttonStyle(PrimaryGradientButtonStyle())
+            .frame(maxWidth: 220)
+            .padding(.top, 6)
         }
     }
 }
