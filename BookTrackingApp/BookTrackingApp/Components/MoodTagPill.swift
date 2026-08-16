@@ -7,21 +7,22 @@ struct MoodTagPill: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Text(mood.emoji)
-                    .font(.caption)
+                    .font(.system(size: 13))
                 Text(mood.rawValue)
-                    .font(.caption.bold())
+                    .font(.dmSans(13, weight: .medium))
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(isSelected ? mood.color.opacity(0.3) : Theme.cardBackground)
+            .background(isSelected ? mood.color.opacity(0.10) : Theme.cardBackground)
             .foregroundStyle(isSelected ? mood.color : Theme.textSecondary)
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .strokeBorder(isSelected ? mood.color : Color.clear, lineWidth: 1)
+                    .strokeBorder(isSelected ? mood.color : Color.clear, lineWidth: 2)
             )
         }
+        .buttonStyle(.plain)
     }
 }

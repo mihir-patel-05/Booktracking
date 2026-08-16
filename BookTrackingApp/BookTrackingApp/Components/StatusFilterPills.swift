@@ -5,40 +5,36 @@ struct StatusFilterPills: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                FilterPill(label: "All", icon: "books.vertical", isSelected: selected == nil) {
+            HStack(spacing: 7) {
+                FilterPill(label: "All", isSelected: selected == nil) {
                     selected = nil
                 }
                 ForEach(BookStatus.allCases, id: \.self) { status in
-                    FilterPill(label: status.rawValue, icon: status.icon, isSelected: selected == status) {
+                    FilterPill(label: status.rawValue, isSelected: selected == status) {
                         selected = status
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
         }
     }
 }
 
-private struct FilterPill: View {
+struct FilterPill: View {
     let label: String
-    let icon: String
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption2)
-                Text(label)
-                    .font(.caption.bold())
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isSelected ? Theme.accent : Theme.cardBackground)
-            .foregroundStyle(isSelected ? .white : Theme.textSecondary)
-            .clipShape(Capsule())
+            Text(label)
+                .font(.dmSans(12, weight: isSelected ? .semibold : .medium))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(isSelected ? Theme.accent : Theme.cardBackground)
+                .foregroundStyle(isSelected ? .white : Theme.textSecondary)
+                .clipShape(Capsule())
         }
+        .buttonStyle(.plain)
     }
 }

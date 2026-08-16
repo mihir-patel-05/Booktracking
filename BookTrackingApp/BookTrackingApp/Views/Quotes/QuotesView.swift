@@ -6,6 +6,9 @@ struct QuotesView: View {
     @Query(sort: \Quote.dateCreated, order: .reverse) private var quotes: [Quote]
     @State private var showAddQuote = false
     @State private var searchText = ""
+    @State private var featuredIndex = 0
+    @State private var editingQuote: Quote?
+    @State private var quotePendingDeletion: Quote?
 
     private var filteredQuotes: [Quote] {
         guard !searchText.isEmpty else { return quotes }
@@ -24,59 +27,304 @@ struct QuotesView: View {
                     emptyState
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(filteredQuotes) { quote in
-                                QuoteCard(quote: quote)
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            modelContext.delete(quote)
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                    }
+                        VStack(alignment: .leading, spacing: 0) {
+                            header
+                                .padding(.horizontal, 20)
+                                .padding(.top, 16)
+
+                            searchBar
+                                .padding(.horizontal, 20)
+                                .padding(.top, 12)
+
+                            if searchText.isEmpty, !quotes.isEmpty {
+                                featuredCard
+                                    .padding(.horizontal, 20)
+                                    .padding(.top, 16)
                             }
+
+                            countLabel
+                                .padding(.horizontal, 20)
+                                .padding(.top, 16)
+                                .padding(.bottom, 12)
+
+                            VStack(spacing: 10) {
+                                ForEach(filteredQuotes) { quote in
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        QuoteCard(quote: quote)
+                                            .contextMenu {
+                                                Button {
+                                                    editingQuote = quote
+                                                } label: {
+                                                    Label("Edit", systemImage: "pencil")
+                                                }
+                                                Button(role: .destructive) {
+                                                    quotePendingDeletion = quote
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
+                                            }
+
+                                        HStack(spacing: 12) {
+                                            Button {
+                                                editingQuote = quote
+                                            } label: {
+                                                Label("Edit", systemImage: "pencil")
+                                            }
+                                            .buttonStyle(QuoteActionButtonStyle())
+
+                                            Button(role: .destructive) {
+                                                quotePendingDeletion = quote
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                            .buttonStyle(QuoteActionButtonStyle(color: .red))
+                                        }
+                                        .padding(.horizontal, 4)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 24)
                         }
-                        .padding()
                     }
                 }
             }
-            .navigationTitle("Quotes")
+            .navigationBarTitleDisplayMode(.inline)
             #if os(iOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
-            .searchable(text: $searchText, prompt: "Search quotes...")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showAddQuote = true
                     } label: {
                         Image(systemName: "plus")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentLight)
                     }
                 }
             }
             .sheet(isPresented: $showAddQuote) {
                 AddQuoteView()
             }
+            .sheet(item: $editingQuote) { quote in
+                EditQuoteView(quote: quote)
+            }
+            .confirmationDialog("Delete this quote?", isPresented: Binding(
+                get: { quotePendingDeletion != nil },
+                set: { if !$0 { quotePendingDeletion = nil } }
+            ), titleVisibility: .visible) {
+                Button("Delete Quote", role: .destructive) {
+                    if let quotePendingDeletion {
+                        modelContext.delete(quotePendingDeletion)
+                    }
+                    quotePendingDeletion = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    quotePendingDeletion = nil
+                }
+            } message: {
+                Text("This will remove the quote from your saved quotes.")
+            }
         }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "quote.opening")
-                .font(.system(size: 48))
-                .foregroundStyle(Theme.accent)
+    private var header: some View {
+        Text("Quotes")
+            .font(.playfair(26, weight: .bold))
+            .foregroundStyle(Theme.textPrimary)
+    }
 
-            Text("No Quotes Yet")
-                .font(.title2.bold())
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.textMuted)
+            TextField("Search quotes...", text: $searchText)
+                .font(.dmSans(14))
                 .foregroundStyle(Theme.textPrimary)
+                .tint(Theme.accentLight)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .designCard(cornerRadius: 12)
+    }
 
+    private var featuredCard: some View {
+        let quote = quotes[min(featuredIndex, quotes.count - 1)]
+
+        return ZStack(alignment: .topLeading) {
+            // Decorative giant quote glyph
+            Text("\u{201C}")
+                .font(.custom("Playfair Display", size: 160))
+                .foregroundStyle(Color(hex: "7C3AED").opacity(0.07))
+                .offset(x: -8, y: -50)
+                .allowsHitTesting(false)
+
+            VStack(alignment: .leading, spacing: 18) {
+                Text(quote.text)
+                    .font(.playfair(17, weight: .semibold))
+                    .italic()
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineSpacing(6)
+                    .multilineTextAlignment(.leading)
+
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let book = quote.book {
+                            Text("— \(book.title)")
+                                .font(.dmSans(12, weight: .semibold))
+                                .foregroundStyle(Theme.accentLight)
+                        }
+                        Text(quote.dateCreated.formatted(.dateTime.month(.abbreviated).day()))
+                            .font(.dmSans(10))
+                            .foregroundStyle(Theme.textMuted)
+                    }
+                    Spacer()
+                    Button {
+                        featuredIndex = Int.random(in: 0..<quotes.count)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("Random")
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 10))
+                        }
+                        .font(.dmSans(12, weight: .semibold))
+                        .foregroundStyle(Theme.accentLight)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Theme.accent.opacity(0.18))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Theme.accent.opacity(0.4), lineWidth: 1)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(24)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .clipped()
+        .bannerCard(cornerRadius: 20)
+    }
+
+    private var countLabel: some View {
+        Text("\(filteredQuotes.count) saved quote\(filteredQuotes.count == 1 ? "" : "s")")
+            .font(.dmSans(11))
+            .foregroundStyle(Theme.textMuted)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 18) {
+            Text("\u{201C}\u{201D}").font(.playfair(52, weight: .bold))
+                .foregroundStyle(Theme.accent)
+            Text("No Quotes Yet")
+                .font(.playfair(22, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
             Text("Save memorable passages from your reading sessions.")
-                .font(.subheadline)
+                .font(.dmSans(14))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+
+            Button { showAddQuote = true } label: {
+                Text("Add a quote")
+            }
+            .buttonStyle(PrimaryGradientButtonStyle())
+            .frame(maxWidth: 220)
+            .padding(.top, 6)
         }
+    }
+}
+
+private struct EditQuoteView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var quote: Quote
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.background.ignoresSafeArea()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        if let book = quote.book {
+                            HStack(spacing: 12) {
+                                BookCoverView(book: book, size: .sm)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(book.title)
+                                        .font(.dmSans(14, weight: .semibold))
+                                        .foregroundStyle(Theme.accentLight)
+                                        .lineLimit(1)
+                                    Text(book.author)
+                                        .font(.dmSans(11))
+                                        .foregroundStyle(Theme.textSecondary)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                            }
+                            .padding(12)
+                            .designCard(cornerRadius: 14)
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionLabel("Quote", bottomPadding: 0)
+                            TextEditor(text: $quote.text)
+                                .scrollContentBackground(.hidden)
+                                .font(.playfair(15, weight: .regular))
+                                .italic()
+                                .foregroundStyle(Theme.textPrimary)
+                                .tint(Theme.accentLight)
+                                .frame(minHeight: 160)
+                                .padding(10)
+                                .designCard(cornerRadius: 14)
+                                .onChange(of: quote.text) {
+                                    quote.needsSync = true
+                                }
+                        }
+
+                        HStack {
+                            Spacer()
+                            Text("Created \(quote.dateCreated.formatted(date: .abbreviated, time: .shortened))")
+                                .font(.dmSans(11))
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                    }
+                    .padding(20)
+                }
+            }
+            .navigationTitle("Edit Quote")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        quote.text = quote.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        quote.needsSync = true
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accentLight)
+                    .disabled(quote.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+}
+
+private struct QuoteActionButtonStyle: ButtonStyle {
+    var color: Color = Theme.accentLight
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.dmSans(11, weight: .semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(color.opacity(configuration.isPressed ? 0.22 : 0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

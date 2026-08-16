@@ -18,45 +18,11 @@ struct AddQuoteView: View {
                 Theme.background.ignoresSafeArea()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        // Book Picker
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Book")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(Theme.textSecondary)
-
-                            Button {
-                                showBookPicker = true
-                            } label: {
-                                HStack {
-                                    Text(selectedBook?.title ?? "Select a book")
-                                        .foregroundStyle(selectedBook != nil ? Theme.textPrimary : Theme.textMuted)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundStyle(Theme.textMuted)
-                                }
-                                .padding(12)
-                                .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                            }
-                        }
-
-                        // Quote Text
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Quote")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(Theme.textSecondary)
-
-                            TextEditor(text: $text)
-                                .scrollContentBackground(.hidden)
-                                .foregroundStyle(Theme.textPrimary)
-                                .frame(minHeight: 120)
-                                .padding(12)
-                                .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
+                    VStack(alignment: .leading, spacing: 18) {
+                        bookCard
+                        quoteField
                     }
-                    .padding()
+                    .padding(20)
                 }
             }
             .navigationTitle("Add Quote")
@@ -67,11 +33,11 @@ struct AddQuoteView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentLight)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { saveQuote() }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentLight)
                         .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty || selectedBook == nil)
                 }
             }
@@ -85,6 +51,54 @@ struct AddQuoteView: View {
                     selectedBook = preselectedBook
                 }
             }
+        }
+    }
+
+    private var bookCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel("Book", bottomPadding: 0)
+            Button { showBookPicker = true } label: {
+                HStack(spacing: 12) {
+                    if let book = selectedBook {
+                        BookCoverView(book: book, size: .sm)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(book.title)
+                                .font(.dmSans(14, weight: .semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                                .lineLimit(1)
+                            Text(book.author)
+                                .font(.dmSans(11))
+                                .foregroundStyle(Theme.textSecondary)
+                                .lineLimit(1)
+                        }
+                    } else {
+                        Text("Select a book")
+                            .font(.dmSans(14))
+                            .foregroundStyle(Theme.textMuted)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(Theme.textMuted)
+                }
+                .padding(14)
+                .designCard(cornerRadius: 14)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var quoteField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel("Quote", bottomPadding: 0)
+            TextEditor(text: $text)
+                .scrollContentBackground(.hidden)
+                .font(.playfair(15, weight: .regular))
+                .italic()
+                .foregroundStyle(Theme.textPrimary)
+                .tint(Theme.accentLight)
+                .frame(minHeight: 140)
+                .padding(10)
+                .designCard(cornerRadius: 14)
         }
     }
 

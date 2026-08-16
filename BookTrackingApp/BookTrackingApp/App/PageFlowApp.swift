@@ -8,6 +8,10 @@ struct PageFlowApp: App {
     @State private var notificationService = NotificationService()
     @State private var timerService = TimerService()
 
+    init() {
+        AppFonts.registerBundledFonts()
+    }
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Book.self,

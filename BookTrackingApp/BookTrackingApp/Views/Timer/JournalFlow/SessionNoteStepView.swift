@@ -8,65 +8,58 @@ struct SessionNoteStepView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Prompt inspiration
+            VStack(alignment: .leading, spacing: 18) {
                 if !notePrompt.isEmpty {
-                    HStack(spacing: 8) {
+                    HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lightbulb.fill")
                             .foregroundStyle(Theme.streak)
-                            .font(.caption)
+                            .font(.system(size: 13))
+                            .padding(.top, 2)
                         Text(notePrompt)
-                            .font(.caption)
-                            .foregroundStyle(Theme.textSecondary)
+                            .font(.dmSans(13))
                             .italic()
+                            .foregroundStyle(Theme.textSecondary)
+                            .lineSpacing(2)
                     }
-                    .padding(10)
-                    .background(Theme.cardBackgroundLight)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .designCard(cornerRadius: 12)
                 }
 
-                // Title
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Title")
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-
+                    SectionLabel("Title", bottomPadding: 0)
                     TextField("Note title", text: $noteTitle)
+                        .font(.dmSans(15, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .tint(Theme.accentLight)
+                        .padding(14)
+                        .designCard(cornerRadius: 14)
                 }
 
-                // Content
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Content")
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-
+                    SectionLabel("Content", bottomPadding: 0)
                     TextEditor(text: $noteContent)
                         .scrollContentBackground(.hidden)
+                        .font(.dmSans(14))
                         .foregroundStyle(Theme.textPrimary)
-                        .frame(minHeight: 120)
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .tint(Theme.accentLight)
+                        .frame(minHeight: 130)
+                        .padding(10)
+                        .designCard(cornerRadius: 14)
                 }
 
-                // Chapter Reference (optional)
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Chapter Reference")
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-
+                    SectionLabel("Chapter Reference (Optional)", bottomPadding: 0)
                     TextField("e.g. Chapter 3", text: $noteChapterRef)
+                        .font(.dmSans(14))
                         .foregroundStyle(Theme.textPrimary)
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .tint(Theme.accentLight)
+                        .padding(14)
+                        .designCard(cornerRadius: 14)
                 }
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
     }
 }

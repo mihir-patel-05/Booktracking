@@ -20,36 +20,38 @@ struct BookSearchView: View {
 
                 VStack(spacing: 0) {
                     searchBar
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                        .padding(.bottom, 12)
 
                     if isSearching {
                         Spacer()
-                        ProgressView()
-                            .tint(Theme.accent)
+                        ProgressView().tint(Theme.accent)
                         Spacer()
                     } else if results.isEmpty && !query.isEmpty {
                         Spacer()
-                        VStack(spacing: 12) {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 40))
-                                .foregroundStyle(Theme.textMuted)
-                            Text("No results found")
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.textSecondary)
-                        }
+                        emptyResults(emoji: "🔍", text: "No results found")
                         Spacer()
                     } else if results.isEmpty {
                         Spacer()
-                        VStack(spacing: 12) {
-                            Image(systemName: "text.magnifyingglass")
-                                .font(.system(size: 40))
-                                .foregroundStyle(Theme.textMuted)
-                            Text("Search by title or author")
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.textSecondary)
-                        }
+                        emptyResults(emoji: "📖", text: "Search by title or author")
                         Spacer()
                     } else {
-                        resultsList
+                        ScrollView {
+                            LazyVStack(spacing: 8) {
+                                ForEach(results) { doc in
+                                    Button {
+                                        selectedDoc = doc
+                                        showAddSheet = true
+                                    } label: {
+                                        SearchResultRow(doc: doc)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 24)
+                        }
                     }
                 }
             }
@@ -61,9 +63,11 @@ struct BookSearchView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Theme.accentLight)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Manual") { showManualAdd = true }
+                        .foregroundStyle(Theme.accentLight)
                 }
             }
             .sheet(isPresented: $showAddSheet) {
@@ -107,11 +111,14 @@ struct BookSearchView: View {
     }
 
     private var searchBar: some View {
-        HStack {
+        HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
+                .font(.system(size: 13))
                 .foregroundStyle(Theme.textMuted)
             TextField("Search books...", text: $query)
+                .font(.dmSans(14))
                 .foregroundStyle(Theme.textPrimary)
+                .tint(Theme.accentLight)
                 .autocorrectionDisabled()
             if !query.isEmpty {
                 Button {
@@ -121,27 +128,20 @@ struct BookSearchView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(Theme.textMuted)
                 }
+                .buttonStyle(.plain)
             }
         }
-        .padding(12)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding()
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .designCard(cornerRadius: 12)
     }
 
-    private var resultsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(results) { doc in
-                    Button {
-                        selectedDoc = doc
-                        showAddSheet = true
-                    } label: {
-                        SearchResultRow(doc: doc)
-                    }
-                }
-            }
-            .padding(.horizontal)
+    private func emptyResults(emoji: String, text: String) -> some View {
+        VStack(spacing: 12) {
+            Text(emoji).font(.system(size: 42))
+            Text(text)
+                .font(.dmSans(14))
+                .foregroundStyle(Theme.textSecondary)
         }
     }
 }
@@ -151,59 +151,38 @@ private struct SearchResultRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            if let urlString = doc.coverURL, let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    default:
-                        placeholder
-                    }
-                }
-                .frame(width: 44, height: 66)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-            } else {
-                placeholder
-                    .frame(width: 44, height: 66)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-            }
+            BookCoverView(
+                title: doc.volumeInfo.title,
+                coverURL: doc.coverURL,
+                paletteSeed: doc.id,
+                size: .sm
+            )
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(doc.title)
-                    .font(.subheadline.bold())
+            VStack(alignment: .leading, spacing: 3) {
+                Text(doc.volumeInfo.title)
+                    .font(.dmSans(13, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
                 Text(doc.authorDisplay)
-                    .font(.caption)
+                    .font(.dmSans(11))
                     .foregroundStyle(Theme.textSecondary)
 
                 if doc.pageCount > 0 {
                     Text("\(doc.pageCount) pages")
-                        .font(.caption2)
+                        .font(.dmSans(10))
                         .foregroundStyle(Theme.textMuted)
                 }
             }
 
             Spacer()
 
-            Image(systemName: "plus.circle")
-                .foregroundStyle(Theme.accent)
-                .font(.title3)
+            Image(systemName: "plus.circle.fill")
+                .foregroundStyle(Theme.accentLight)
+                .font(.system(size: 22))
         }
         .padding(12)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private var placeholder: some View {
-        RoundedRectangle(cornerRadius: 4)
-            .fill(Theme.cardBackgroundLight)
-            .overlay(
-                Image(systemName: "book.closed")
-                    .font(.caption)
-                    .foregroundStyle(Theme.textMuted)
-            )
+        .designCard(cornerRadius: 14)
     }
 }

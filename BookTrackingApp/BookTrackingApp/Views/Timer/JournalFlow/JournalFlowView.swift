@@ -9,21 +9,17 @@ struct JournalFlowView: View {
     let timerService: TimerService
     let onSave: (ReadingSession, Int) -> Void
 
-    // Step navigation
     @State private var currentStep = 0
 
-    // Step 1: Mood & Reflection
     @State private var selectedMoodTags: Set<MoodTag> = []
     @State private var reflectionText = ""
     let reflectionPrompt: String
 
-    // Step 2: Session Note
     @State private var noteTitle = ""
     @State private var noteContent = ""
     @State private var noteChapterRef = ""
     let notePrompt: String
 
-    // Step 3: Quote
     @State private var quoteText = ""
 
     init(book: Book, timerService: TimerService, onSave: @escaping (ReadingSession, Int) -> Void) {
@@ -45,28 +41,23 @@ struct JournalFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            VStack(spacing: 8) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(Theme.success)
-
-                Text("Session Complete")
-                    .font(.title3.bold())
+            VStack(spacing: 6) {
+                Text("✨").font(.system(size: 40))
+                Text("Session Complete!")
+                    .font(.playfair(22, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
-
-                Text(timerService.formattedElapsedTime)
-                    .font(.subheadline)
+                Text("\(book.title) · \(timerService.formattedElapsedTime)")
+                    .font(.dmSans(13))
                     .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
             }
-            .padding(.top, 8)
-            .padding(.bottom, 12)
+            .padding(.top, 14)
+            .padding(.bottom, 14)
+            .padding(.horizontal, 20)
 
-            // Step indicator
             JournalStepIndicator(currentStep: currentStep)
-                .padding(.bottom, 16)
+                .padding(.bottom, 12)
 
-            // Step content
             Group {
                 switch currentStep {
                 case 0:
@@ -98,84 +89,81 @@ struct JournalFlowView: View {
                 removal: .move(edge: .leading).combined(with: .opacity)
             ))
 
-            // Bottom navigation bar
             bottomBar
         }
     }
 
-    // MARK: - Bottom Bar
-
     private var bottomBar: some View {
-        HStack {
-            // Back button
+        HStack(spacing: 12) {
             if currentStep > 0 {
                 Button {
                     withAnimation { currentStep -= 1 }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .semibold))
                         Text("Back")
                     }
-                    .font(.subheadline)
+                    .font(.dmSans(13, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
                 }
+                .buttonStyle(.plain)
             }
 
             Spacer()
 
             if currentStep < 2 {
-                // Skip button
                 Button {
                     withAnimation { currentStep += 1 }
                 } label: {
                     Text("Skip")
-                        .font(.subheadline)
+                        .font(.dmSans(13))
                         .foregroundStyle(Theme.textMuted)
                 }
-                .padding(.trailing, 12)
+                .buttonStyle(.plain)
 
-                // Next button
                 Button {
                     withAnimation { currentStep += 1 }
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Text("Next")
                         Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
                     }
-                    .font(.subheadline.bold())
+                    .font(.dmSans(14, weight: .semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(Theme.accent)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 11)
+                    .background(Theme.primaryButtonGradient)
                     .clipShape(Capsule())
+                    .shadow(color: Theme.accent.opacity(0.4), radius: 10, y: 4)
                 }
+                .buttonStyle(.plain)
             } else {
-                // Save button (Step 3)
                 Button {
                     saveSession()
                 } label: {
-                    Text("Save Session")
-                        .font(.subheadline.bold())
+                    Text("Save Session →")
+                        .font(.dmSans(14, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(Theme.accent)
+                        .padding(.vertical, 11)
+                        .background(Theme.primaryButtonGradient)
                         .clipShape(Capsule())
+                        .shadow(color: Theme.accent.opacity(0.45), radius: 10, y: 4)
                 }
+                .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
         .background(Theme.background)
     }
-
-    // MARK: - Save
 
     private func saveSession() {
         let elapsed = timerService.elapsedSeconds
         let breakdown = xpBreakdown
 
-        // Create ReadingSession
         let session = ReadingSession(
             book: book,
             durationSeconds: elapsed,
@@ -187,7 +175,6 @@ struct JournalFlowView: View {
         session.supabaseUserId = authService.currentUserId
         modelContext.insert(session)
 
-        // Create SessionNote if filled
         let trimmedTitle = noteTitle.trimmingCharacters(in: .whitespaces)
         if !trimmedTitle.isEmpty {
             let note = SessionNote(
@@ -201,7 +188,6 @@ struct JournalFlowView: View {
             modelContext.insert(note)
         }
 
-        // Create Quote if filled
         let trimmedQuote = quoteText.trimmingCharacters(in: .whitespaces)
         if !trimmedQuote.isEmpty {
             let quote = Quote(

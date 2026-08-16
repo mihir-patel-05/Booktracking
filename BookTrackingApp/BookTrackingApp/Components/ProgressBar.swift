@@ -3,16 +3,16 @@ import SwiftUI
 struct ProgressBar: View {
     let progress: Double
     var height: CGFloat = 6
-    var backgroundColor: Color = Theme.cardBackgroundLight
+    var backgroundColor: Color = Color.white.opacity(0.07)
     var foregroundColor: Color = Theme.accent
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: height / 2)
+                Capsule()
                     .fill(backgroundColor)
 
-                RoundedRectangle(cornerRadius: height / 2)
+                Capsule()
                     .fill(foregroundColor)
                     .frame(width: max(0, geo.size.width * min(CGFloat(progress), 1.0)))
             }
