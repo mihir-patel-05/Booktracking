@@ -1,0 +1,17 @@
+import { expect, test } from "@playwright/test";
+
+test("landing and authentication remain usable at the target viewport", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /read.*reflect.*grow/i })).toBeVisible();
+  await page.getByRole("link", { name: /start your reading flow/i }).first().click();
+  await expect(page).toHaveURL(/\/signup$/);
+  await expect(page.getByRole("button", { name: /create account/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible();
+  await expect(page.locator("body")).not.toHaveCSS("overflow-x", "scroll");
+});
+
+test("protected pages redirect to authentication without configuration", async ({ page }) => {
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/login\?error=configuration/);
+  await expect(page.getByRole("heading", { name: /return to your flow/i })).toBeVisible();
+});

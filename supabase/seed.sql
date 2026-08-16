@@ -1,0 +1,1 @@
+-- Intentionally empty. PageFlow starts with no shared application data.

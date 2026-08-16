@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Main purple gradient -->
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="50%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+
+    <!-- Glow gradient for the flowing pages -->
+    <linearGradient id="pageGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- Subtle inner shadow -->
+    <radialGradient id="bgGrad" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1A1A2E"/>
+      <stop offset="100%" stop-color="#0D0D0D"/>
+    </radialGradient>
+
+    <!-- Drop shadow filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="blur"/>
+      <feFlood flood-color="#7C3AED" flood-opacity="0.35" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="url(#bgGrad)"/>
+
+  <!-- Subtle border -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="none" stroke="#7C3AED" stroke-opacity="0.15" stroke-width="2"/>
+
+  <!-- Ambient glow behind the icon -->
+  <ellipse cx="256" cy="270" rx="120" ry="110" fill="#7C3AED" opacity="0.08"/>
+
+  <!-- Book spine / base shape -->
+  <g filter="url(#softGlow)">
+    <!-- Left page (static, slightly back) -->
+    <path d="M160 160 C160 160, 160 340, 160 350 C160 360, 168 368, 178 368 L248 368 C253 368, 256 365, 256 360 L256 168 C256 163, 253 160, 248 160 Z"
+          fill="#1A1A2E" stroke="#A78BFA" stroke-opacity="0.3" stroke-width="1.5"/>
+
+    <!-- Left page lines -->
+    <line x1="184" y1="200" x2="232" y2="200" stroke="#A78BFA" stroke-opacity="0.15" stroke-width="2" stroke-linecap="round"/>
+    <line x1="184" y1="222" x2="240" y2="222" stroke="#A78BFA" stroke-opacity="0.12" stroke-width="2" stroke-linecap="round"/>
+    <line x1="184" y1="244" x2="224" y2="244" stroke="#A78BFA" stroke-opacity="0.1" stroke-width="2" stroke-linecap="round"/>
+    <line x1="184" y1="266" x2="236" y2="266" stroke="#A78BFA" stroke-opacity="0.08" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Right page (static, slightly back) -->
+    <path d="M352 160 C352 160, 352 340, 352 350 C352 360, 344 368, 334 368 L264 368 C259 368, 256 365, 256 360 L256 168 C256 163, 259 160, 264 160 Z"
+          fill="#222240" stroke="#A78BFA" stroke-opacity="0.2" stroke-width="1.5"/>
+
+    <!-- Right page lines -->
+    <line x1="280" y1="200" x2="328" y2="200" stroke="#A78BFA" stroke-opacity="0.15" stroke-width="2" stroke-linecap="round"/>
+    <line x1="280" y1="222" x2="336" y2="222" stroke="#A78BFA" stroke-opacity="0.12" stroke-width="2" stroke-linecap="round"/>
+    <line x1="280" y1="244" x2="320" y2="244" stroke="#A78BFA" stroke-opacity="0.1" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Flowing pages rising from the book — the "flow" element -->
+  <g filter="url(#glow)">
+    <!-- Page 1 (furthest, most transparent) -->
+    <path d="M220 148 C220 138, 228 132, 236 132 L296 124 C306 123, 314 130, 314 140 L310 200 C310 210, 302 216, 292 217 L236 222 C226 223, 220 216, 220 206 Z"
+          fill="url(#purpleGrad)" opacity="0.2" transform="rotate(-12, 267, 170)"/>
+
+    <!-- Page 2 (middle) -->
+    <path d="M224 130 C224 118, 233 110, 243 110 L303 104 C313 103, 322 111, 322 123 L318 178 C318 190, 309 197, 299 198 L243 202 C233 203, 224 195, 224 183 Z"
+          fill="url(#purpleGrad)" opacity="0.4" transform="rotate(-6, 273, 150)"/>
+
+    <!-- Page 3 (front, most visible — the hero page in flight) -->
+    <path d="M228 108 C228 96, 237 88, 248 88 L312 84 C323 83, 332 92, 332 104 L328 154 C328 166, 319 174, 308 175 L248 178 C237 179, 228 170, 228 158 Z"
+          fill="url(#purpleGrad)" opacity="0.7" transform="rotate(-2, 280, 130)"/>
+
+    <!-- Sparkle / motion dots -->
+    <circle cx="340" cy="100" r="3" fill="#A78BFA" opacity="0.7"/>
+    <circle cx="350" cy="120" r="2" fill="#A78BFA" opacity="0.5"/>
+    <circle cx="355" cy="88" r="2.5" fill="#A78BFA" opacity="0.4"/>
+    <circle cx="210" cy="118" r="2" fill="#A78BFA" opacity="0.3"/>
+  </g>
+
+  <!-- Center spine highlight -->
+  <line x1="256" y1="160" x2="256" y2="368" stroke="url(#purpleGrad)" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Bookmark ribbon -->
+  <path d="M268 160 L268 130 L280 142 L292 130 L292 160" fill="#7C3AED" opacity="0.8"/>
+</svg>
