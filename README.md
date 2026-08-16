@@ -28,8 +28,8 @@ PageFlow sits at the intersection of a reading tracker, a personal knowledge bas
 - **Language:** Swift
 - **UI Framework:** SwiftUI
 - **Local Database:** SwiftData (offline-first)
-- **Backend:** Supabase (Auth, Postgres, Row Level Security)
-- **Auth:** Sign in with Apple via Supabase Auth
+- **Backend:** Firebase (Authentication, Cloud Firestore)
+- **Auth:** Sign in with Apple and email/password via Firebase Auth
 - **Book Search:** Open Library API
 - **Charts:** Swift Charts
 - **Notifications:** UserNotifications
@@ -37,12 +37,12 @@ PageFlow sits at the intersection of a reading tracker, a personal knowledge bas
 
 ## Architecture
 
-PageFlow uses an **offline-first** data architecture. SwiftData is the primary local store — all writes go to SwiftData first, then sync to Supabase in the background. This ensures the app works fully offline and syncs when connectivity is available.
+PageFlow uses an **offline-first** data architecture. SwiftData is the primary local store — all writes go to SwiftData first, then sync to Cloud Firestore in the background. This ensures the app works fully offline and syncs when connectivity is available.
 
 ```
 PageFlow/
 ├── App/
-│   ├── PageFlowApp.swift          # Entry point, ModelContainer, Supabase init
+│   ├── PageFlowApp.swift          # Entry point and ModelContainer
 │   └── ContentView.swift          # Auth gate + TabView
 ├── Models/
 │   ├── Book.swift
@@ -58,10 +58,10 @@ PageFlow/
 │   ├── Quotes/QuotesView.swift
 │   └── Stats/StatsView.swift
 ├── Services/
-│   └── Supabase/
-│       ├── SupabaseManager.swift   # Supabase client singleton
-│       ├── AuthService.swift       # Sign in with Apple + session
-│       └── SyncService.swift       # Background sync scaffold
+│   └── Firebase/
+│       ├── FirebaseManager.swift   # Firebase configuration guard
+│       ├── AuthService.swift       # Firebase Auth session + sign in
+│       └── SyncService.swift       # SwiftData to Firestore sync
 ├── Components/
 └── Utilities/
     ├── Theme.swift                 # Dark mode color palette
@@ -73,7 +73,7 @@ PageFlow/
 ### Prerequisites
 
 - Xcode 16+ with iOS 17 SDK
-- A [Supabase](https://supabase.com) project
+- A [Firebase](https://firebase.google.com) project with Authentication and Cloud Firestore enabled
 - An Apple Developer account (for Sign in with Apple)
 
 ### Setup
@@ -84,41 +84,37 @@ PageFlow/
    cd PageFlow
    ```
 
-2. **Configure Supabase credentials**
+2. **Configure Firebase**
 
-   Copy the example secrets file and add your Supabase project URL and anon key:
-   ```bash
-   cp Secrets.example.plist PageFlow/Secrets.plist
-   ```
-   Edit `Secrets.plist` with your values:
-   ```xml
-   <key>SUPABASE_URL</key>
-   <string>https://your-project-id.supabase.co</string>
-   <key>SUPABASE_ANON_KEY</key>
-   <string>your-anon-key-here</string>
-   ```
+   In the Firebase console, add an Apple app for each bundle ID you run:
+   - `com.codewithmihir.BookTrackingApp`
+   - `com.codewithmihir.Booktracking`
 
-   > **Important:** `Secrets.plist` is in `.gitignore` and should never be committed.
+   Download each app's `GoogleService-Info.plist` and add it to the matching Xcode app target. The iOS app should place it under `BookTrackingApp/BookTrackingApp/`; the macOS app should place it under `PageFlowMac/PageFlowMac/Booktracking/Resources/` and include it in the app target's resources.
 
-3. **Run the Supabase migration**
+   > `GoogleService-Info.plist` is in `.gitignore`. Use `GoogleService-Info.example.plist` only as a shape reference.
 
-   Open the Supabase SQL Editor and run the contents of `supabase-migration.sql`. This creates all required tables (`books`, `reading_sessions`, `session_notes`, `quotes`, `user_stats`) with Row Level Security policies.
+3. **Enable Firebase Authentication**
 
-4. **Enable Sign in with Apple** in your Supabase project's Auth settings.
+   Enable Email/Password and Apple providers in Firebase Authentication. For Apple sign-in, configure the Apple Developer settings and Firebase Apple provider values for the app bundle IDs.
+
+4. **Create Firestore rules**
+
+   Create a Cloud Firestore database and publish the rules in `firebase-firestore.rules`. The app writes user data under `users/{uid}/...`, and the rules limit access to the signed-in Firebase user.
 
 5. **Open in Xcode** and run on a simulator or device.
 
-### Supabase Tables
+### Firestore Collections
 
-| Table | Purpose |
+| Collection path | Purpose |
 |---|---|
-| `books` | User's book library with status and progress |
-| `reading_sessions` | Timer sessions with mood tags and reflections |
-| `session_notes` | Notes captured during post-session journal |
-| `quotes` | Saved quotes linked to books and sessions |
-| `user_stats` | XP, streaks, and leveling data |
+| `users/{uid}/books` | User's book library with status and progress |
+| `users/{uid}/readingSessions` | Timer sessions with mood tags and reflections |
+| `users/{uid}/sessionNotes` | Notes captured during post-session journal |
+| `users/{uid}/quotes` | Saved quotes linked to books and sessions |
+| `users/{uid}/userStats` | XP, streaks, and leveling data |
 
-All tables enforce Row Level Security — users can only access their own data.
+Firestore security rules enforce that users can only access their own data.
 
 ## XP & Leveling
 
@@ -144,7 +140,7 @@ All tables enforce Row Level Security — users can only access their own data.
 
 The project follows a 7-phase build plan (see `implementation-plan.md` for full details):
 
-1. **Project Scaffold** — Models, Supabase, Auth, tab navigation ✅
+1. **Project Scaffold** — Models, Firebase, Auth, tab navigation ✅
 2. **Book Library** — Add/search/manage books, Home screen
 3. **Reading Timer** — Countdown timer with background support
 4. **Journal Flow & XP** — Post-session guided journal, XP calculation

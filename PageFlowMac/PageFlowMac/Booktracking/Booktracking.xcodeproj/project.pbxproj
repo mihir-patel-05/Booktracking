@@ -7,19 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E76A8D772F6CAE2400402F91 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = E76A8D762F6CAE2400402F91 /* Auth */; };
-		E76A8D792F6CAE2400402F91 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = E76A8D782F6CAE2400402F91 /* Functions */; };
-		E76A8D7B2F6CAE2400402F91 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = E76A8D7A2F6CAE2400402F91 /* PostgREST */; };
-		E76A8D7D2F6CAE2400402F91 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = E76A8D7C2F6CAE2400402F91 /* Realtime */; };
-		E76A8D7F2F6CAE2400402F91 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = E76A8D7E2F6CAE2400402F91 /* Storage */; };
+		8C409912BCB048ABA41E0514 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = CEB5F873341E4D5BB42D48D5 /* FirebaseAuth */; };
+		C609EC8BBBDA4835B7E920D9 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4A88E438611644BE9F42C3ED /* FirebaseCore */; };
+		FC768398FB0F4B51BFF22270 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0028F7332C074084AFCB9B9A /* FirebaseFirestore */; };
 		E76A8D892F6CAECD00402F91 /* XPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D872F6CAECD00402F91 /* XPService.swift */; };
 		E76A8D8A2F6CAECD00402F91 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D852F6CAECD00402F91 /* NotificationService.swift */; };
-		E76A8D8B2F6CAECD00402F91 /* SupabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D812F6CAECD00402F91 /* SupabaseManager.swift */; };
+		E76A8D8B2F6CAECD00402F91 /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D812F6CAECD00402F91 /* FirebaseManager.swift */; };
 		E76A8D8C2F6CAECD00402F91 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D802F6CAECD00402F91 /* AuthService.swift */; };
 		E76A8D8D2F6CAECD00402F91 /* SyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D822F6CAECD00402F91 /* SyncService.swift */; };
 		E76A8D8E2F6CAECD00402F91 /* BookSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D842F6CAECD00402F91 /* BookSearchService.swift */; };
 		E76A8D8F2F6CAECD00402F91 /* TimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76A8D862F6CAECD00402F91 /* TimerService.swift */; };
-		E76A8D922F6CB05300402F91 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E76A8D912F6CB05300402F91 /* Supabase */; };
 		E76BF60E2F6A59700096A9D2 /* PageFlowMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF60C2F6A59700096A9D2 /* PageFlowMacApp.swift */; };
 		E76BF60F2F6A59700096A9D2 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF60B2F6A59700096A9D2 /* MacContentView.swift */; };
 		E76BF6102F6A59700096A9D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF60A2F6A59700096A9D2 /* ContentView.swift */; };
@@ -35,7 +32,6 @@
 		E76BF6382F6A59C20096A9D2 /* SessionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF6332F6A59C20096A9D2 /* SessionNote.swift */; };
 		E76BF6392F6A59C20096A9D2 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF6302F6A59C20096A9D2 /* Book.swift */; };
 		E76BF63A2F6A59C20096A9D2 /* ReadingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF6322F6A59C20096A9D2 /* ReadingSession.swift */; };
-		E76BF63E2F6A59CE0096A9D2 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = E76BF63C2F6A59CE0096A9D2 /* Secrets.plist */; };
 		E76BF6422F6A59D90096A9D2 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF63F2F6A59D90096A9D2 /* Constants.swift */; };
 		E76BF6432F6A59D90096A9D2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF6402F6A59D90096A9D2 /* Theme.swift */; };
 		E76BF6602F6A59E30096A9D2 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76BF6472F6A59E30096A9D2 /* BookDetailView.swift */; };
@@ -78,7 +74,7 @@
 
 /* Begin PBXFileReference section */
 		E76A8D802F6CAECD00402F91 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
-		E76A8D812F6CAECD00402F91 /* SupabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseManager.swift; sourceTree = "<group>"; };
+		E76A8D812F6CAECD00402F91 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
 		E76A8D822F6CAECD00402F91 /* SyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncService.swift; sourceTree = "<group>"; };
 		E76A8D842F6CAECD00402F91 /* BookSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookSearchService.swift; sourceTree = "<group>"; };
 		E76A8D852F6CAECD00402F91 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
@@ -103,7 +99,6 @@
 		E76BF6332F6A59C20096A9D2 /* SessionNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionNote.swift; sourceTree = "<group>"; };
 		E76BF6342F6A59C20096A9D2 /* UserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserStats.swift; sourceTree = "<group>"; };
 		E76BF63B2F6A59CE0096A9D2 /* PageFlowMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PageFlowMac.entitlements; sourceTree = "<group>"; };
-		E76BF63C2F6A59CE0096A9D2 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		E76BF63F2F6A59D90096A9D2 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		E76BF6402F6A59D90096A9D2 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		E76BF6442F6A59E30096A9D2 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
@@ -150,12 +145,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E76A8D7B2F6CAE2400402F91 /* PostgREST in Frameworks */,
-				E76A8D792F6CAE2400402F91 /* Functions in Frameworks */,
-				E76A8D922F6CB05300402F91 /* Supabase in Frameworks */,
-				E76A8D772F6CAE2400402F91 /* Auth in Frameworks */,
-				E76A8D7F2F6CAE2400402F91 /* Storage in Frameworks */,
-				E76A8D7D2F6CAE2400402F91 /* Realtime in Frameworks */,
+				8C409912BCB048ABA41E0514 /* FirebaseAuth in Frameworks */,
+				C609EC8BBBDA4835B7E920D9 /* FirebaseCore in Frameworks */,
+				FC768398FB0F4B51BFF22270 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -176,20 +168,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		E76A8D832F6CAECD00402F91 /* Supabase */ = {
+		E76A8D832F6CAECD00402F91 /* Firebase */ = {
 			isa = PBXGroup;
 			children = (
 				E76A8D802F6CAECD00402F91 /* AuthService.swift */,
-				E76A8D812F6CAECD00402F91 /* SupabaseManager.swift */,
+				E76A8D812F6CAECD00402F91 /* FirebaseManager.swift */,
 				E76A8D822F6CAECD00402F91 /* SyncService.swift */,
 			);
-			path = Supabase;
+			path = Firebase;
 			sourceTree = "<group>";
 		};
 		E76A8D882F6CAECD00402F91 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				E76A8D832F6CAECD00402F91 /* Supabase */,
+				E76A8D832F6CAECD00402F91 /* Firebase */,
 				E76A8D842F6CAECD00402F91 /* BookSearchService.swift */,
 				E76A8D852F6CAECD00402F91 /* NotificationService.swift */,
 				E76A8D862F6CAECD00402F91 /* TimerService.swift */,
@@ -273,7 +265,6 @@
 			isa = PBXGroup;
 			children = (
 				E76BF63B2F6A59CE0096A9D2 /* PageFlowMac.entitlements */,
-				E76BF63C2F6A59CE0096A9D2 /* Secrets.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -397,12 +388,9 @@
 			);
 			name = Booktracking;
 			packageProductDependencies = (
-				E76A8D762F6CAE2400402F91 /* Auth */,
-				E76A8D782F6CAE2400402F91 /* Functions */,
-				E76A8D7A2F6CAE2400402F91 /* PostgREST */,
-				E76A8D7C2F6CAE2400402F91 /* Realtime */,
-				E76A8D7E2F6CAE2400402F91 /* Storage */,
-				E76A8D912F6CB05300402F91 /* Supabase */,
+				CEB5F873341E4D5BB42D48D5 /* FirebaseAuth */,
+				4A88E438611644BE9F42C3ED /* FirebaseCore */,
+				0028F7332C074084AFCB9B9A /* FirebaseFirestore */,
 			);
 			productName = Booktracking;
 			productReference = E76BF5D42F6A58C10096A9D2 /* Booktracking.app */;
@@ -487,7 +475,7 @@
 			mainGroup = E76BF5CB2F6A58C10096A9D2;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				2D965C9AE86348249C5E7B9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E76BF5D52F6A58C10096A9D2 /* Products */;
@@ -506,7 +494,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E76BF63E2F6A59CE0096A9D2 /* Secrets.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,7 +532,7 @@
 				E76BF6392F6A59C20096A9D2 /* Book.swift in Sources */,
 				E76A8D892F6CAECD00402F91 /* XPService.swift in Sources */,
 				E76A8D8A2F6CAECD00402F91 /* NotificationService.swift in Sources */,
-				E76A8D8B2F6CAECD00402F91 /* SupabaseManager.swift in Sources */,
+				E76A8D8B2F6CAECD00402F91 /* FirebaseManager.swift in Sources */,
 				E76A8D8C2F6CAECD00402F91 /* AuthService.swift in Sources */,
 				E76A8D8D2F6CAECD00402F91 /* SyncService.swift in Sources */,
 				E76A8D8E2F6CAECD00402F91 /* BookSearchService.swift in Sources */,
@@ -909,46 +896,31 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+		2D965C9AE86348249C5E7B9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/supabase/supabase-swift";
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.5.1;
+				minimumVersion = 12.12.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E76A8D762F6CAE2400402F91 /* Auth */ = {
+		0028F7332C074084AFCB9B9A /* FirebaseFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Auth;
+			package = 2D965C9AE86348249C5E7B9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
-		E76A8D782F6CAE2400402F91 /* Functions */ = {
+		4A88E438611644BE9F42C3ED /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Functions;
+			package = 2D965C9AE86348249C5E7B9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
-		E76A8D7A2F6CAE2400402F91 /* PostgREST */ = {
+		CEB5F873341E4D5BB42D48D5 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = PostgREST;
-		};
-		E76A8D7C2F6CAE2400402F91 /* Realtime */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Realtime;
-		};
-		E76A8D7E2F6CAE2400402F91 /* Storage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Storage;
-		};
-		E76A8D912F6CB05300402F91 /* Supabase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E76A8D752F6CAE2400402F91 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Supabase;
+			package = 2D965C9AE86348249C5E7B9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

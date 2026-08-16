@@ -21,3 +21,4 @@ build/
 
 # Secrets - NEVER commit
 Secrets.plist
+GoogleService-Info.plist

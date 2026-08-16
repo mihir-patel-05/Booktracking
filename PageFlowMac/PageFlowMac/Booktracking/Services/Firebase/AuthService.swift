@@ -1,11 +1,11 @@
 import Foundation
 import CryptoKit
-import Supabase
+import FirebaseAuth
 import AuthenticationServices
 
 @Observable
 final class AuthService {
-    private let supabase = SupabaseManager.shared.client
+    private let firebase = FirebaseManager.shared
 
     var currentUserId: String?
     var isAuthenticated = false
@@ -20,49 +20,67 @@ final class AuthService {
     // MARK: - Session Management
 
     func checkSession() async {
-        do {
-            let session = try await supabase.auth.session
-            currentUserId = session.user.id.uuidString
-            isAuthenticated = true
-        } catch {
+        guard firebase.configureIfPossible() else {
             isAuthenticated = false
             currentUserId = nil
+            isLoading = false
+            return
         }
+
+        if let user = Auth.auth().currentUser {
+            currentUserId = user.uid
+            isAuthenticated = true
+        } else {
+            currentUserId = nil
+            isAuthenticated = false
+        }
+
         isLoading = false
     }
 
     // MARK: - Sign in with Apple
 
-    func signInWithApple(idToken: String, nonce: String) async throws {
-        let session = try await supabase.auth.signInWithIdToken(
-            credentials: .init(
-                provider: .apple,
-                idToken: idToken,
-                nonce: nonce
-            )
+    func signInWithApple(
+        idToken: String,
+        nonce: String,
+        fullName: PersonNameComponents? = nil
+    ) async throws {
+        try firebase.requireConfigured()
+
+        let credential = OAuthProvider.appleCredential(
+            withIDToken: idToken,
+            rawNonce: nonce,
+            fullName: fullName
         )
-        currentUserId = session.user.id.uuidString
+        let result = try await Auth.auth().signIn(with: credential)
+        currentUserId = result.user.uid
         isAuthenticated = true
     }
 
     // MARK: - Email/Password Auth
 
     func signUp(email: String, password: String) async throws {
-        let result = try await supabase.auth.signUp(email: email, password: password)
-        currentUserId = result.user.id.uuidString
+        try firebase.requireConfigured()
+
+        let result = try await Auth.auth().createUser(withEmail: email, password: password)
+        currentUserId = result.user.uid
         isAuthenticated = true
     }
 
     func signIn(email: String, password: String) async throws {
-        let session = try await supabase.auth.signIn(email: email, password: password)
-        currentUserId = session.user.id.uuidString
+        try firebase.requireConfigured()
+
+        let result = try await Auth.auth().signIn(withEmail: email, password: password)
+        currentUserId = result.user.uid
         isAuthenticated = true
     }
 
     // MARK: - Sign Out
 
     func signOut() async throws {
-        try await supabase.auth.signOut()
+        try firebase.requireConfigured()
+
+        try Auth.auth().signOut()
         currentUserId = nil
         isAuthenticated = false
     }
