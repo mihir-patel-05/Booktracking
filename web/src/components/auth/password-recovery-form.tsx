@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { Turnstile } from "@/components/auth/turnstile";
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
 
@@ -14,6 +15,8 @@ export function PasswordRecoveryForm({ mode }: { mode: "request" | "reset" }) {
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string>();
+  const onCaptcha = useCallback((token: string | undefined) => setCaptchaToken(token), []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,6 +32,7 @@ export function PasswordRecoveryForm({ mode }: { mode: "request" | "reset" }) {
     if (mode === "request") {
       const { error: authError } = await supabase.auth.resetPasswordForEmail(value, {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        captchaToken,
       });
       if (authError) setError(authError.message);
       else setMessage("If that address belongs to an account, a recovery link is on its way.");
@@ -75,6 +79,7 @@ export function PasswordRecoveryForm({ mode }: { mode: "request" | "reset" }) {
           <span className="mt-2 block text-xs leading-5 text-muted">12+ characters with uppercase, lowercase, a number, and a symbol.</span>
         </label>
       ) : null}
+      {mode === "request" ? <Turnstile onToken={onCaptcha} /> : null}
       {error ? <p className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-red-200" role="alert">{error}</p> : null}
       {message ? <p className="rounded-xl border border-success/30 bg-success/10 p-3 text-sm text-emerald-100" role="status">{message}</p> : null}
       <button className="primary-button w-full" disabled={submitting} type="submit">

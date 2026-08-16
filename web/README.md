@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is the iPhone-first PageFlow web application, built with Next.js 15 and Supabase and prepared for AWS Amplify Hosting.
+
+See the repository's [`docs/web-launch.md`](../docs/web-launch.md) for architecture, local verification, Supabase Auth/database setup, AWS deployment, and the production acceptance checklist.
 
 ## Getting Started
 
