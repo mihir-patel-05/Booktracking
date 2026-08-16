@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "DM Sans";
+  src: url("/fonts/DMSans-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/fonts/PlayfairDisplay-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/fonts/PlayfairDisplay-Italic.ttf") format("truetype");
+  font-display: swap;
+  font-style: italic;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0d0d0d;
+  --surface: #1a1a2e;
+  --surface-mid: #1e1e38;
+  --surface-light: #222240;
+  --foreground: #ffffff;
+  --text-secondary: #a7a7b5;
+  --text-muted: #727283;
+  --border: rgba(124, 58, 237, 0.2);
+  --border-strong: rgba(167, 139, 250, 0.38);
+  --accent: #7c3aed;
+  --accent-light: #a78bfa;
+  --accent-bright: #a855f7;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --content-width: 1180px;
+  --mobile-nav-height: 76px;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-mid: var(--surface-mid);
+  --color-surface-light: var(--surface-light);
   --color-foreground: var(--foreground);
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* { box-sizing: border-box; }
+
+html {
+  min-height: 100%;
+  background: var(--background);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
+  min-height: 100svh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 90% -10%, rgba(124, 58, 237, 0.2), transparent 34rem),
+    radial-gradient(circle at -15% 75%, rgba(76, 29, 149, 0.13), transparent 28rem),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+button, input, textarea, select { font: inherit; }
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+a { color: inherit; text-decoration: none; }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 3px;
+}
+
+::selection { background: rgba(167, 139, 250, 0.35); }
+.font-display { font-family: "Playfair Display", Georgia, serif; }
+
+.glass-card {
+  border: 1px solid var(--border);
+  background: linear-gradient(145deg, rgba(30, 30, 56, 0.94), rgba(20, 20, 38, 0.94));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0.8rem 1.25rem;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+  box-shadow: 0 12px 34px rgba(124, 58, 237, 0.3);
+}
+
+.secondary-button {
+  border: 1px solid var(--border-strong);
+  background: rgba(26, 26, 46, 0.76);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+.safe-page {
+  min-height: 100svh;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
