@@ -199,7 +199,11 @@ struct AuthView: View {
 
             Task {
                 do {
-                    try await authService.signInWithApple(idToken: idToken, nonce: nonce)
+                    try await authService.signInWithApple(
+                        idToken: idToken,
+                        nonce: nonce,
+                        fullName: appleIDCredential.fullName
+                    )
                 } catch {
                     errorMessage = "Sign in failed: \(error.localizedDescription)"
                 }
