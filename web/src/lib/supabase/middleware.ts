@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseConfig, hasSupabaseConfig } from "@/lib/supabase/env";
+import type { Database } from "@/lib/database.types";
 
 const authPaths = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
@@ -19,7 +20,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   const { url, publishableKey } = getSupabaseConfig();
-  const supabase = createServerClient(url, publishableKey, {
+  const supabase = createServerClient<Database>(url, publishableKey, {
     cookies: {
       encode: "tokens-only",
       getAll: () => request.cookies.getAll(),

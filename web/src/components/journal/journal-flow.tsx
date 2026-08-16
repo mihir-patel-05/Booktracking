@@ -49,13 +49,13 @@ export function JournalFlow({ session, userId, onDiscard }: { session: Session; 
       p_started_at: draft.session.startedAt,
       p_time_zone: timeZone,
       p_mood_tags: draft.moodTags,
-      p_reflection_prompt: draft.reflection.trim() ? prompt : null,
-      p_reflection_text: draft.reflection.trim() || null,
-      p_note_title: noteTitle,
-      p_note_content: draft.noteContent.trim() || null,
+      p_reflection_prompt: draft.reflection.trim() ? prompt : undefined,
+      p_reflection_text: draft.reflection.trim() || undefined,
+      p_note_title: noteTitle ?? undefined,
+      p_note_content: draft.noteContent.trim() || undefined,
       p_note_tags: tags,
-      p_chapter_reference: draft.chapter.trim() || null,
-      p_quote_text: draft.quote.trim() || null,
+      p_chapter_reference: draft.chapter.trim() || undefined,
+      p_quote_text: draft.quote.trim() || undefined,
     });
     if (rpcError) setError(rpcError.message);
     else {
