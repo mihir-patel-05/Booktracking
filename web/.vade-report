@@ -1,42 +1,46 @@
-## Vercel Speed Insights Installation Complete
+# Vercel Web Analytics Installation Report
 
-Successfully installed and configured Vercel Speed Insights for the PageFlow Next.js application.
+## Summary
+Successfully installed and configured Vercel Web Analytics for the Next.js (App Router) project following the latest official documentation from https://vercel.com/docs/analytics/quickstart.
 
-### Changes Made
+## Changes Made
 
-**1. Package Installation**
-   - Installed `@vercel/speed-insights` version 2.0.0
-   - Used `--legacy-peer-deps` flag to resolve peer dependency conflicts with vitest
-   - Updated `package.json` with the new dependency
-   - Updated `package-lock.json` with resolved dependencies
+### 1. Package Installation
+- Installed `@vercel/analytics` version 2.0.1 using npm with `--legacy-peer-deps` flag
+- Updated `package.json` to include the new dependency
+- Updated `package-lock.json` with the new package and its dependencies
 
-**2. Code Integration**
-   - Modified: `web/src/app/layout.tsx`
-   - Added import: `import { SpeedInsights } from "@vercel/speed-insights/next";`
-   - Added `<SpeedInsights />` component inside the `<body>` tag in the root layout
-   - Followed the official Vercel documentation for Next.js 13.5+ integration
+### 2. Code Integration
+Modified `/web/src/app/layout.tsx`:
+- Added import: `import { Analytics } from "@vercel/analytics/next";`
+- Added `<Analytics />` component to the layout's body, positioned before the existing `<SpeedInsights />` component
 
-### Implementation Details
+## Implementation Details
 
-The integration follows Vercel's recommended approach for modern Next.js applications:
-- Used the framework-specific package `@vercel/speed-insights/next` for optimal performance
-- Placed the component in the root layout to ensure it tracks all pages
-- The component is self-contained and requires no additional configuration
-- Automatically collects Core Web Vitals and performance metrics when deployed on Vercel
+The implementation follows the Next.js App Router pattern as specified in the Vercel documentation:
+- The Analytics component is imported from `@vercel/analytics/next` (framework-specific import for Next.js)
+- Component is placed in the root layout file (`app/layout.tsx`) to ensure it's available across all pages
+- Positioned alongside the existing SpeedInsights component for consistent monitoring setup
 
-### Verification Steps Completed
+## Verification Steps Completed
 
-✅ Build: Successfully built the project with `npm run build`
-✅ Linting: Passed all linter checks with `npm run lint`
-✅ No breaking changes introduced
-✅ Dependencies properly installed and locked
+1. ✅ **Build Verification**: Ran `npm run build` - Build completed successfully with no errors
+2. ✅ **Linting**: Ran `npm run lint` - No linting errors introduced
+3. ✅ **Testing**: Ran `npm run test` - All 4 tests passed
+4. ✅ **Dependencies**: Package lock file updated correctly
 
-### Next Steps
+## Notes
 
-Once deployed to Vercel, Speed Insights will automatically:
-- Collect real user performance metrics
-- Track Core Web Vitals (LCP, FID, CLS, FCP, TTFB, INP)
-- Display analytics in the Vercel dashboard
-- Work on all Vercel plans
+- The project already had `@vercel/speed-insights` configured, so the Analytics component was added alongside it
+- Installation required `--legacy-peer-deps` flag due to peer dependency conflicts with the project's vite version (used in vitest)
+- Once deployed to Vercel, you'll need to enable Web Analytics in the Vercel dashboard under the Analytics section
+- Analytics data will begin collecting automatically after deployment
+- The Analytics component will track page views and visitor data following Vercel's privacy-compliant approach
 
-No additional configuration is required. The integration is complete and ready for deployment.
+## Next Steps for Deployment
+
+1. Deploy the application to Vercel using `vercel deploy`
+2. Navigate to the Vercel dashboard for your project
+3. Click on "Analytics" in the sidebar
+4. Click "Enable" to activate Web Analytics
+5. Verify data collection by checking the Network tab for requests to `/_vercel/insights/*` after deployment
