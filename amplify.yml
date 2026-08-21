@@ -1,22 +1,29 @@
 version: 1
+
 applications:
   - appRoot: web
     frontend:
+      buildPath: /
       phases:
         preBuild:
           commands:
             - nvm install 22
             - nvm use 22
-            - npm ci
+            - npm --prefix web ci
         build:
           commands:
-            - npm test
-            - npm run build
+            - test -n "$NEXT_PUBLIC_SUPABASE_URL"
+            - test -n "$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+            - env | grep -E '^NEXT_PUBLIC_(SUPABASE_URL|SUPABASE_PUBLISHABLE_KEY|SITE_URL|TURNSTILE_SITE_KEY)=' > web/.env.production
+            - npm --prefix web audit --audit-level=high
+            - npm --prefix web test
+            - npm --prefix web run lint
+            - npm --prefix web run build
       artifacts:
-        baseDirectory: .next
+        baseDirectory: web/.next
         files:
           - "**/*"
       cache:
         paths:
-          - node_modules/**/*
-          - .next/cache/**/*
+          - web/node_modules/**/*
+          - web/.next/cache/**/*
