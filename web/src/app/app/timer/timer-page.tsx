@@ -18,7 +18,10 @@ export function TimerPageClient({ books, initialBookId, userId }: { books: Array
       }
     } catch { localStorage.removeItem(`pageflow:journal-draft:${userId}`); }
   }, [userId]);
-  return <><PageHeading eyebrow="Focus mode" title="Reading timer" description="The deadline-based timer recovers accurately after a refresh or background pause." />
-    {finished ? <JournalFlow onDiscard={() => setFinished(undefined)} session={finished} userId={userId} /> : <ReadingTimer books={books} initialBookId={initialBookId} onComplete={setFinished} userId={userId} />}
+  if (finished) return <JournalFlow onDiscard={() => setFinished(undefined)} session={finished} userId={userId} />;
+
+  return <>
+    <PageHeading description="Set the volume and the length; the clock runs to a deadline, so it survives a refresh or a closed lid." eyebrow="The reading room" title="Set the clock" />
+    <ReadingTimer books={books} initialBookId={initialBookId} onComplete={setFinished} userId={userId} />
   </>;
 }
