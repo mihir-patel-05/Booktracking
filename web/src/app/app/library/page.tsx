@@ -4,18 +4,9 @@ import { AddBookSheet } from "@/components/books/add-book-sheet";
 import { PageHeading } from "@/components/app/page-heading";
 import { Meter } from "@/components/app/register";
 import { percentRead } from "@/lib/format";
+import { SHELVES, SHELF_BY_STATUS } from "@/lib/shelves";
 import { createClient } from "@/lib/supabase/server";
 import { deleteBook } from "./actions";
-
-/** The shelves, as the register names them. */
-const SHELVES = [
-  { status: "Currently Reading", label: "Reading", tag: "tag-accent" },
-  { status: "Want to Read", label: "To read", tag: "tag-outline" },
-  { status: "Completed", label: "Finished", tag: "tag-neutral" },
-  { status: "Abandoned", label: "Set aside", tag: "tag-outline" },
-] as const;
-
-const SHELF_BY_STATUS = new Map(SHELVES.map((shelf) => [shelf.status as string, shelf]));
 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
   const { status, q } = await searchParams;

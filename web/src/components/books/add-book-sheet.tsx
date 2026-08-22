@@ -3,6 +3,7 @@
 import { Search, X } from "lucide-react";
 import { useActionState, useEffect, useState, type FormEvent } from "react";
 import { createBook, type BookActionState } from "@/app/app/library/actions";
+import { SHELF_STATUSES } from "@/lib/shelves";
 
 type Result = { id: string; title: string; author: string; totalPages: number; coverUrl: string };
 
@@ -82,7 +83,13 @@ export function AddBookSheet() {
               <Field defaultValue={selected.title} label="Title" name="title" required />
               <Field defaultValue={selected.author} label="Author" name="author" required />
               <Field className="input tnum" defaultValue={selected.totalPages} label="Total pages" min="1" name="totalPages" required type="number" />
-              <Field defaultValue={selected.coverUrl} label="Cover URL (optional)" name="coverUrl" type="url" />
+              <label className="block">
+                <span className="field-label">Shelf</span>
+                <select className="input" defaultValue="Currently Reading" name="status">
+                  {SHELF_STATUSES.map((shelf) => <option key={shelf} value={shelf}>{shelf}</option>)}
+                </select>
+              </label>
+              <Field className="input sm:col-span-2" defaultValue={selected.coverUrl} label="Cover URL (optional)" name="coverUrl" type="url" />
             </div>
             {state.error ? <p className="mt-4 text-sm text-[var(--danger)]" role="alert">{state.error}</p> : null}
             <div className="mt-6 flex justify-end gap-3 border-t border-line pt-6">
