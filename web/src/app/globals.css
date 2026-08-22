@@ -51,8 +51,10 @@
   --font-body: var(--font-lora), "Lora", Georgia, serif;
 }
 
-/* Night, chosen explicitly. */
-:root[data-theme="night"] {
+/* Night, chosen explicitly — on the document, or on any subtree that is
+   its own room (the timer). */
+:root[data-theme="night"],
+.night {
   --background: #1a1917;
   --rail: #211f1c;
   --surface: #211f1c;
