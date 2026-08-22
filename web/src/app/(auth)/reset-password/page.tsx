@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Set a new password" };
 
 export default function ResetPasswordPage() {
   return (
-    <AuthShell eyebrow="Secure your account" title="Choose a new password." description="Your new password must meet PageFlow’s security requirements.">
+    <AuthShell eyebrow="Secure your account" title="Choose a new password" description="It must meet PageFlow’s security requirements.">
       <PasswordRecoveryForm mode="reset" />
     </AuthShell>
   );

@@ -7,9 +7,9 @@ export const metadata: Metadata = { title: "Create account" };
 
 export default function SignupPage() {
   return (
-    <AuthShell eyebrow="Start reading" title="Create your PageFlow." description="A private place for every book, idea, and reading streak.">
-      <EmailAuthForm mode="signup" />
+    <AuthShell description="A register of your own — no feed, no recommendations." eyebrow="Open an account" title="Begin the register">
       <GoogleAuthButton />
+      <EmailAuthForm mode="signup" />
     </AuthShell>
   );
 }
