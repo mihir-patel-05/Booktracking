@@ -12,8 +12,6 @@
   --background: #f3f2f2;
   --rail: #f0eeec;
   --surface: #f0eeec;
-  --surface-mid: #f8f4f4;
-  --surface-light: #eae9e9;
   --panel: #f8f4f4;
 
   --foreground: #201f1d;
@@ -29,11 +27,6 @@
   --gold-text: #7d5411;
   --gold-tint: rgba(182, 130, 53, 0.1);
   --gold-wash: rgba(182, 130, 53, 0.3);
-
-  /* Legacy aliases — kept so existing utilities keep resolving. */
-  --accent: var(--gold);
-  --accent-light: var(--gold-text);
-  --accent-bright: #ac803e;
 
   --success: #4a6b4f;
   --warning: #a06f24;
@@ -58,8 +51,6 @@
   --background: #1a1917;
   --rail: #211f1c;
   --surface: #211f1c;
-  --surface-mid: #242220;
-  --surface-light: #2b2926;
   --panel: #242220;
 
   --foreground: #f3f2f2;
@@ -76,7 +67,6 @@
   --gold-tint: rgba(225, 173, 102, 0.13);
   --gold-wash: rgba(225, 173, 102, 0.28);
 
-  --accent-bright: #e1ad66;
   --success: #8fae93;
   --warning: #e1ad66;
   --danger: #d99287;
@@ -94,8 +84,6 @@
     --background: #1a1917;
     --rail: #211f1c;
     --surface: #211f1c;
-    --surface-mid: #242220;
-    --surface-light: #2b2926;
     --panel: #242220;
 
     --foreground: #f3f2f2;
@@ -112,8 +100,7 @@
     --gold-tint: rgba(225, 173, 102, 0.13);
     --gold-wash: rgba(225, 173, 102, 0.28);
 
-    --accent-bright: #e1ad66;
-    --success: #8fae93;
+      --success: #8fae93;
     --warning: #e1ad66;
     --danger: #d99287;
 
@@ -129,8 +116,6 @@
   --color-background: var(--background);
   --color-rail: var(--rail);
   --color-surface: var(--surface);
-  --color-surface-mid: var(--surface-mid);
-  --color-surface-light: var(--surface-light);
   --color-panel: var(--panel);
   --color-foreground: var(--foreground);
   --color-secondary: var(--text-secondary);
@@ -138,8 +123,6 @@
   --color-faint: var(--text-faint);
   --color-line: var(--border);
   --color-line-soft: var(--border-soft);
-  --color-accent: var(--gold);
-  --color-accent-light: var(--gold-text);
   --color-gold: var(--gold);
   --color-gold-text: var(--gold-text);
   --color-success: var(--success);
@@ -236,30 +219,6 @@ select:focus-visible {
 .btn-icon { width: 36px; height: 36px; padding: 0; }
 .btn-block { width: 100%; }
 
-/* Legacy button names, restated in the reading-room idiom. */
-.primary-button,
-.secondary-button {
-  display: inline-flex;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 4px;
-  padding: 9px 17px;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--foreground);
-}
-.primary-button { color: var(--gold-text); border-color: var(--gold); }
-.primary-button:hover { background: var(--gold-tint); }
-.secondary-button:hover { background: color-mix(in srgb, var(--foreground) 7%, transparent); }
-.primary-button:disabled,
-.secondary-button:disabled { cursor: not-allowed; opacity: 0.45; }
-
 /* — forms — */
 .field > label,
 .field-label {
@@ -324,14 +283,6 @@ select.input { background: var(--background); }
   background: transparent;
 }
 .plate-filled { background: var(--panel); }
-
-/* Legacy card name, restated as a plate. */
-.glass-card {
-  border: 1px solid var(--border);
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-}
 
 /* — progress: a hairline with a gilt fill — */
 .meter { height: 3px; background: var(--border-soft); }
