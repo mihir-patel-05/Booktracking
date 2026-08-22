@@ -1,25 +1,65 @@
 "use client";
 
-import { Download, Share2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { deleteQuote, saveQuote } from "@/app/app/quotes/actions";
 
 type Book = { id: string; title: string };
-export function QuoteCard({ quote, books }: { quote: { id: string; book_id: string; text: string; bookTitle: string }; books: Book[] }) {
-  const card = useRef<HTMLDivElement>(null);
-  const [sharing, setSharing] = useState(false);
 
-  async function share() {
-    if (!card.current) return;
-    setSharing(true);
-    const dataUrl = await toPng(card.current, { pixelRatio: 2, backgroundColor: "#171729", cacheBust: true });
+export function QuoteCard({ quote, books }: { quote: { id: string; book_id: string; text: string; bookTitle: string }; books: Book[] }) {
+  const plate = useRef<HTMLDivElement>(null);
+  const [making, setMaking] = useState(false);
+
+  /** "Make a plate": the line rendered out as an image worth keeping. */
+  async function makePlate() {
+    if (!plate.current) return;
+    setMaking(true);
+    const ground = getComputedStyle(document.documentElement).getPropertyValue("--panel").trim() || "#f8f4f4";
+    const dataUrl = await toPng(plate.current, { pixelRatio: 2, backgroundColor: ground, cacheBust: true });
     const blob = await (await fetch(dataUrl)).blob();
     const file = new File([blob], "pageflow-quote.png", { type: "image/png" });
-    if (navigator.share && navigator.canShare?.({ files: [file] })) await navigator.share({ title: "A quote from PageFlow", files: [file] }).catch(() => undefined);
+    if (navigator.share && navigator.canShare?.({ files: [file] })) await navigator.share({ title: "A line from PageFlow", files: [file] }).catch(() => undefined);
     else { const link = document.createElement("a"); link.download = file.name; link.href = dataUrl; link.click(); }
-    setSharing(false);
+    setMaking(false);
   }
 
-  return <article className="glass-card rounded-2xl p-5"><div className="rounded-2xl bg-gradient-to-br from-[#242044] to-[#151526] p-7" ref={card}><span className="font-display text-5xl leading-none text-accent-light">“</span><blockquote className="font-display text-xl leading-8 sm:text-2xl">{quote.text}</blockquote><p className="mt-5 text-xs uppercase tracking-[.14em] text-accent-light">{quote.bookTitle} · PageFlow</p></div><div className="mt-3 grid grid-cols-2 gap-2"><button className="secondary-button" disabled={sharing} onClick={share}><Share2 size={17} />{sharing ? "Preparing…" : "Share"}</button><button className="secondary-button" disabled={sharing} onClick={share}><Download size={17} />PNG</button></div><details className="mt-3"><summary className="flex min-h-11 cursor-pointer items-center text-sm text-secondary">Edit quote</summary><form action={saveQuote} className="space-y-3"><input name="id" type="hidden" value={quote.id} /><select className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[#141424] px-4" defaultValue={quote.book_id} name="bookId">{books.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}</select><textarea className="min-h-28 w-full rounded-xl border border-[var(--border)] bg-black/20 p-4" defaultValue={quote.text} name="text" required /><button className="primary-button w-full">Save quote</button></form><form action={deleteQuote} className="mt-2"><input name="id" type="hidden" value={quote.id} /><button className="flex min-h-11 items-center text-sm text-red-200">Delete quote</button></form></details></article>;
+  return (
+    <figure className="plate m-0">
+      <div className="plate-filled border-b border-line px-8 py-10 sm:px-10 sm:py-11" ref={plate}>
+        <span aria-hidden className="block h-6 font-display text-[56px] leading-[.4] text-gold">“</span>
+        <blockquote className="m-0 font-display text-[24px] leading-[1.36] tracking-[-.01em] sm:text-[29px]">{quote.text}</blockquote>
+      </div>
+
+      <figcaption className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-muted">
+        <span>{quote.bookTitle}</span>
+        <span className="flex gap-4">
+          <button className="text-gold-text disabled:opacity-45" disabled={making} onClick={makePlate} type="button">
+            {making ? "Setting…" : "Make a plate"}
+          </button>
+        </span>
+      </figcaption>
+
+      <details className="border-t border-line px-6 pb-5 pt-4">
+        <summary className="cursor-pointer text-xs text-gold-text">Revise</summary>
+        <form action={saveQuote} className="mt-4 grid gap-4">
+          <input name="id" type="hidden" value={quote.id} />
+          <label className="block">
+            <span className="field-label">Volume</span>
+            <select className="input" defaultValue={quote.book_id} name="bookId">
+              {books.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="field-label">The line</span>
+            <textarea className="input" defaultValue={quote.text} name="text" required />
+          </label>
+          <button className="btn btn-primary btn-block" type="submit">Save the revision</button>
+        </form>
+        <form action={deleteQuote} className="mt-3">
+          <input name="id" type="hidden" value={quote.id} />
+          <button className="btn btn-ghost text-[var(--danger)]" type="submit">Strike this line out</button>
+        </form>
+      </details>
+    </figure>
+  );
 }
