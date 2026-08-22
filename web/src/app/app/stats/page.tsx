@@ -1,13 +1,7 @@
 import { Flame, Snowflake, Sparkles, Trophy } from "lucide-react";
 import { PageHeading } from "@/components/app/page-heading";
+import { dateOffset, localDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
-
-function localDate(timeZone: string, date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
-  const value = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
-  return `${value.year}-${value.month}-${value.day}`;
-}
-function dateOffset(date: string, days: number) { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10); }
 
 export default async function StatsPage() {
   const supabase = await createClient();
