@@ -1,11 +1,16 @@
 "use client";
 
-import { Pause, Play, RotateCcw, Square } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Pause, Play, Square } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Ledger } from "@/components/app/register";
 import { elapsedSeconds, formatClock, secondsRemaining, type TimerSnapshot } from "@/lib/timer";
 
 type Book = { id: string; title: string; author: string };
 type CompletedSession = { bookId: string; startedAt: string; durationSeconds: number };
+
+const clock = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 export function ReadingTimer({ books, initialBookId, userId, onComplete }: { books: Book[]; initialBookId?: string; userId: string; onComplete?: (session: CompletedSession) => void }) {
   const storageKey = `pageflow:active-timer:${userId}`;
@@ -64,7 +69,7 @@ export function ReadingTimer({ books, initialBookId, userId, onComplete }: { boo
     setSnapshot({ ...snapshot, targetEnd: Date.now() + snapshot.remainingSeconds * 1000, running: true });
   }
 
-  function reset() { setSnapshot(null); setNow(Date.now()); }
+  function discard() { setSnapshot(null); setNow(Date.now()); }
 
   function finish() {
     if (!snapshot) return;
@@ -75,21 +80,127 @@ export function ReadingTimer({ books, initialBookId, userId, onComplete }: { boo
 
   const activeBook = useMemo(() => books.find((book) => book.id === (snapshot?.bookId ?? bookId)), [bookId, books, snapshot?.bookId]);
 
-  if (!books.length) return <div className="glass-card rounded-2xl p-8 text-center"><p className="font-display text-xl">Add a book before starting a timer.</p><p className="mt-2 text-sm text-secondary">A reading session always belongs to one of your books.</p></div>;
+  if (!books.length) {
+    return (
+      <div className="plate px-6 py-10 text-center">
+        <p className="font-display text-[23px]">Enter a volume before the clock is set.</p>
+        <p className="mt-2 text-sm text-muted">A sitting always belongs to one of your books.</p>
+        <Link className="btn btn-secondary mt-5" href="/app/library">Go to the Library</Link>
+      </div>
+    );
+  }
 
-  return <div className="mx-auto max-w-2xl">
-    <div className="glass-card rounded-3xl p-5 text-center sm:p-8">
-      <p className="text-xs font-bold uppercase tracking-[.16em] text-accent-light">{snapshot ? activeBook?.title : "Plan a focused session"}</p>
-      <div className="relative mx-auto my-7 grid aspect-square max-w-[280px] place-items-center rounded-full" style={{ background: `conic-gradient(var(--accent-light) ${progress * 360}deg, rgba(255,255,255,.07) 0)` }}><div className="grid size-[calc(100%-12px)] place-items-center rounded-full bg-[#171729]"><div><p aria-live="polite" className="font-display text-6xl tabular-nums">{formatClock(remaining)}</p><p className="mt-2 text-sm text-muted">{snapshot?.running ? "Reading now" : snapshot ? "Paused" : "Ready when you are"}</p></div></div></div>
-      {!snapshot ? <div className="space-y-5 text-left">
-        <label><span className="mb-2 block text-xs uppercase tracking-[.12em] text-muted">Book</span><select className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[#141424] px-4" onChange={(event) => setBookId(event.target.value)} value={bookId}>{books.map((book) => <option key={book.id} value={book.id}>{book.title} — {book.author}</option>)}</select></label>
-        <div><span className="mb-2 block text-xs uppercase tracking-[.12em] text-muted">Duration</span><div className="grid grid-cols-4 gap-2">{[15, 25, 45, 60].map((preset) => <button className={`min-h-11 rounded-xl border text-sm ${minutes === preset ? "border-accent bg-accent/15 text-accent-light" : "border-[var(--border)] text-secondary"}`} key={preset} onClick={() => setMinutes(preset)} type="button">{preset}m</button>)}</div><label className="mt-3 flex items-center gap-3 text-sm text-secondary">Custom <input className="min-h-11 min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-black/20 px-3 text-white" max="1080" min="1" onChange={(event) => setMinutes(Number(event.target.value))} type="number" value={minutes} /> minutes</label></div>
-        <button className="primary-button w-full" disabled={!bookId} onClick={start} type="button"><Play fill="currentColor" size={18} />Start timer</button>
-      </div> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <button className="secondary-button" onClick={snapshot.running ? pause : resume} type="button">{snapshot.running ? <><Pause size={18} />Pause</> : <><Play size={18} />Resume</>}</button>
-        <button className="primary-button" onClick={finish} type="button"><Square size={17} />Finish now</button>
-        <button className="secondary-button col-span-2 sm:col-span-1" onClick={reset} type="button"><RotateCcw size={17} />Cancel</button>
-      </div>}
+  /* Not yet running: the plain setting-out of the sitting, in whatever
+     light the reader has chosen. */
+  if (!snapshot) {
+    return (
+      <div className="max-w-[560px]">
+        <div className="grid gap-5">
+          <label className="block">
+            <span className="field-label">Volume</span>
+            <select className="input" onChange={(event) => setBookId(event.target.value)} value={bookId}>
+              {books.map((book) => <option key={book.id} value={book.id}>{book.title} — {book.author}</option>)}
+            </select>
+          </label>
+          <div>
+            <span className="field-label">Length of the sitting</span>
+            <div className="grid grid-cols-4 gap-2">
+              {[15, 25, 45, 60].map((preset) => (
+                <button
+                  className={`btn ${minutes === preset ? "btn-primary" : "btn-secondary"}`}
+                  key={preset}
+                  onClick={() => setMinutes(preset)}
+                  type="button"
+                >
+                  {preset} min
+                </button>
+              ))}
+            </div>
+            <label className="mt-3 flex items-center gap-3 text-sm text-muted">
+              Or
+              <input className="input tnum w-24" max="1080" min="1" onChange={(event) => setMinutes(Number(event.target.value))} type="number" value={minutes} />
+              minutes
+            </label>
+          </div>
+          <button className="btn btn-primary btn-block" disabled={!bookId} onClick={start} type="button">
+            <Play size={15} strokeWidth={1.5} />Enter the reading room
+          </button>
+          <p className="text-xs leading-6 text-faint">
+            The clock runs to a deadline, so it survives a refresh or a closed lid.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* Running: the room goes dark, and takes the whole screen with it. */
+  const started = clock.format(new Date(snapshot.startedAt));
+  const elapsed = snapshot.durationSeconds - remaining;
+
+  return (
+    <div className="night fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background text-foreground">
+      <header className="flex items-center justify-between gap-4 border-b border-line px-5 py-5 lg:px-11">
+        <div className="flex items-center gap-3.5">
+          <Image alt="" className="rounded" height="24" src="/brand/pageflow-logo.svg" width="24" />
+          <span className="font-display text-xl">PageFlow</span>
+          <span className="hidden h-4 w-px bg-line sm:block" />
+          <span className="hidden text-[9.5px] uppercase tracking-[.2em] text-muted sm:block">Reading room</span>
+        </div>
+        <button className="btn btn-secondary" onClick={discard} type="button">Leave the room</button>
+      </header>
+
+      <main className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <section className="grid place-items-center px-5 py-12 lg:px-14">
+          <div className="text-center">
+            <p className="eyebrow tracking-[.24em]">Tonight’s sitting</p>
+            <p className="mt-3.5 font-display text-[30px] leading-tight">{activeBook?.title}</p>
+            <p className="mt-1 text-[13.5px] italic text-muted">{activeBook?.author}</p>
+
+            <div
+              className="relative mx-auto mt-11 grid aspect-square w-full max-w-[396px] place-items-center rounded-full"
+              style={{ background: `conic-gradient(var(--gold) ${progress * 360}deg, var(--border) 0)` }}
+            >
+              <div className="absolute inset-[2px] rounded-full bg-background" />
+              <div className="absolute inset-5 rounded-full border border-line" />
+              <div className="relative text-center">
+                <p aria-live="polite" className="tnum font-display text-[64px] leading-none tracking-[-.02em] sm:text-[88px]">{formatClock(remaining)}</p>
+                <p className="mt-3.5 text-[10px] uppercase tracking-[.22em] text-muted">
+                  {snapshot.running ? `remaining of ${Math.round(snapshot.durationSeconds / 60)} min` : "paused"}
+                </p>
+                <span className="mx-auto mt-4 block h-px w-7 bg-gold" />
+              </div>
+            </div>
+
+            <div className="mt-11 flex flex-wrap justify-center gap-3.5">
+              <button className="btn btn-secondary" onClick={snapshot.running ? pause : resume} type="button">
+                {snapshot.running ? <><Pause size={15} strokeWidth={1.5} />Pause</> : <><Play size={15} strokeWidth={1.5} />Resume</>}
+              </button>
+              <button className="btn btn-primary" onClick={finish} type="button"><Square size={14} strokeWidth={1.5} />End and record</button>
+              <button className="btn text-muted" onClick={discard} type="button">Discard</button>
+            </div>
+            <p className="mt-6 text-xs text-faint">The clock runs to a deadline, so it survives a refresh or a closed lid.</p>
+          </div>
+        </section>
+
+        <aside className="flex flex-col gap-8 border-t border-line px-5 py-10 lg:border-l lg:border-t-0 lg:px-9 lg:py-11">
+          <div>
+            <p className="eyebrow eyebrow-muted mb-3.5">This sitting</p>
+            <Ledger
+              rows={[
+                { label: "Elapsed", value: formatClock(elapsed) },
+                { label: "Started", value: started },
+                { label: "Length set", value: `${Math.round(snapshot.durationSeconds / 60)} min` },
+              ]}
+            />
+          </div>
+          <div className="border-t border-line pt-6">
+            <p className="eyebrow eyebrow-muted mb-3">When the bell rings</p>
+            <p className="text-[12.5px] leading-7 text-muted">
+              You’ll be asked for the mood of the sitting, a thought worth keeping, and any line you want copied out.
+            </p>
+          </div>
+        </aside>
+      </main>
     </div>
-  </div>;
+  );
 }

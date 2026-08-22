@@ -7,9 +7,9 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage() {
   return (
-    <AuthShell eyebrow="Welcome back" title="Return to your flow." description="Your library, notes, and momentum are waiting.">
-      <EmailAuthForm mode="login" />
+    <AuthShell description="Or open an account — it takes a minute." eyebrow="Welcome back" title="Sign in">
       <GoogleAuthButton />
+      <EmailAuthForm mode="login" />
     </AuthShell>
   );
 }

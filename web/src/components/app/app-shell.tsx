@@ -3,81 +3,120 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { BarChart3, BookOpen, Home, Library, LogOut, Menu, Settings, StickyNote, Timer, X } from "lucide-react";
+import { BarChart3, Home, Library, Menu, Quote, StickyNote, Timer, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
-const primary = [
-  { href: "/app", label: "Home", icon: Home },
+const nav = [
+  { href: "/app", label: "Today", icon: Home },
   { href: "/app/library", label: "Library", icon: Library },
   { href: "/app/timer", label: "Timer", icon: Timer },
   { href: "/app/notes", label: "Notes", icon: StickyNote },
-  { href: "/app/stats", label: "Stats", icon: BarChart3 },
+  { href: "/app/quotes", label: "Quotes", icon: Quote },
+  { href: "/app/stats", label: "Statistics", icon: BarChart3 },
 ];
 
-const desktop = [...primary, { href: "/app/quotes", label: "Quotes", icon: BookOpen }];
+const mobile = nav.filter((item) => item.href !== "/app/quotes");
 
 function isCurrent(pathname: string, href: string) {
   return href === "/app" ? pathname === href : pathname.startsWith(href);
 }
 
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+  return parts.map((part) => part[0]!.toLocaleUpperCase()).join("") || "PF";
+}
+
 export function AppShell({ children, displayName }: { children: ReactNode; displayName: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const today = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
 
   return (
-    <div className="min-h-svh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-[var(--border)] bg-[#11111c]/95 px-4 py-6 backdrop-blur-xl lg:flex lg:flex-col">
-        <Link className="mb-9 flex min-h-11 items-center gap-3 px-2" href="/app">
-          <Image alt="" height="34" src="/brand/pageflow-logo.svg" width="34" />
-          <span className="font-display text-xl">PageFlow</span>
-        </Link>
-        <nav aria-label="Main navigation" className="space-y-1">
-          {desktop.map((item) => <NavItem active={isCurrent(pathname, item.href)} key={item.href} {...item} />)}
+    <div className="min-h-svh lg:grid lg:grid-cols-[var(--rail-width)_minmax(0,1fr)]">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[var(--rail-width)] flex-col border-r border-line bg-rail py-[30px] lg:flex">
+        <div className="px-[26px] pb-[26px]">
+          <Link className="flex items-center gap-3" href="/app">
+            <Image alt="" className="rounded-md" height="30" src="/brand/pageflow-logo.svg" width="30" />
+            <span className="font-display text-[27px] leading-none tracking-[.01em]">PageFlow</span>
+          </Link>
+          <div className="mt-[11px] mb-[9px] h-px w-[26px] bg-gold" />
+          <p className="text-[9.5px] uppercase tracking-[.22em] text-muted">A reading register</p>
+        </div>
+
+        <nav aria-label="Main navigation" className="flex flex-col">
+          {nav.map(({ href, label, icon: Icon }) => {
+            const active = isCurrent(pathname, href);
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center gap-[11px] px-[26px] py-[10px] text-sm ${
+                  active
+                    ? "bg-[var(--gold-tint)] text-gold-text shadow-[inset_2px_0_0_var(--gold)]"
+                    : "text-secondary hover:text-foreground"
+                }`}
+                href={href}
+                key={href}
+              >
+                <Icon size={16} strokeWidth={1.5} />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="mt-auto border-t border-[var(--border)] pt-4">
-          <NavItem active={isCurrent(pathname, "/app/settings")} href="/app/settings" icon={Settings} label="Settings" />
+
+        <div className="mt-auto flex flex-col gap-3 border-t border-line px-[26px] pt-[18px]">
+          <Link className={`text-[13px] ${isCurrent(pathname, "/app/settings") ? "text-gold-text" : "text-muted hover:text-foreground"}`} href="/app/settings">Settings</Link>
           <form action="/auth/signout" method="post">
-            <button className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-secondary hover:bg-white/5 hover:text-white" type="submit">
-              <LogOut size={19} /> Sign out
-            </button>
+            <button className="text-[13px] text-muted hover:text-foreground" type="submit">Sign out</button>
           </form>
         </div>
       </aside>
 
       <div className="min-w-0 lg:col-start-2">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-[var(--border)] bg-background/90 px-[max(1rem,env(safe-area-inset-left))] pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:px-8">
+        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-line bg-background px-[max(1rem,env(safe-area-inset-left))] pt-[env(safe-area-inset-top)] lg:px-11">
           <Link className="flex min-h-11 items-center gap-2 lg:hidden" href="/app">
-            <Image alt="" height="30" src="/brand/pageflow-logo.svg" width="30" />
-            <span className="font-display text-lg">PageFlow</span>
+            <Image alt="" className="rounded" height="26" src="/brand/pageflow-logo.svg" width="26" />
+            <span className="font-display text-xl">PageFlow</span>
           </Link>
-          <p className="hidden text-sm text-secondary lg:block">Welcome back, <span className="text-white">{displayName || "reader"}</span>.</p>
-          <button aria-expanded={menuOpen} aria-label="Open account menu" className="flex size-11 items-center justify-center rounded-xl border border-[var(--border)] lg:hidden" onClick={() => setMenuOpen(!menuOpen)} type="button">
-            {menuOpen ? <X size={21} /> : <Menu size={21} />}
+          <p className="tnum hidden text-[9.5px] uppercase tracking-[.2em] text-muted lg:block">{today}</p>
+          <button aria-expanded={menuOpen} aria-label="Open account menu" className="flex size-11 items-center justify-center border border-line lg:hidden" onClick={() => setMenuOpen(!menuOpen)} type="button">
+            {menuOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
           </button>
-          <Link className="hidden min-h-11 items-center rounded-xl px-3 text-sm text-secondary hover:text-white lg:flex" href="/app/settings"><Settings className="mr-2" size={18} />Account</Link>
+          <div className="hidden items-center gap-[18px] lg:flex">
+            <span className="text-[13px] text-muted">{displayName || "reader"}</span>
+            <Link aria-label="Settings" className="grid size-[30px] place-items-center rounded-full border border-[var(--border-strong)] font-display text-sm" href="/app/settings">
+              {initials(displayName)}
+            </Link>
+          </div>
         </header>
 
         {menuOpen ? (
-          <div className="fixed inset-x-4 top-[calc(4rem+env(safe-area-inset-top))] z-30 rounded-2xl border border-[var(--border)] bg-surface p-3 shadow-2xl lg:hidden">
-            <Link className="flex min-h-12 items-center gap-3 rounded-xl px-3" href="/app/quotes" onClick={() => setMenuOpen(false)}><BookOpen size={20} />Quotes</Link>
-            <Link className="flex min-h-12 items-center gap-3 rounded-xl px-3" href="/app/settings" onClick={() => setMenuOpen(false)}><Settings size={20} />Settings</Link>
-            <form action="/auth/signout" method="post"><button className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-red-200" type="submit"><LogOut size={20} />Sign out</button></form>
+          <div className="fixed inset-x-4 top-[calc(4rem+env(safe-area-inset-top))] z-30 border border-line bg-panel p-2 shadow-[var(--shadow-lg)] lg:hidden">
+            <Link className="flex min-h-12 items-center gap-3 px-3 text-sm" href="/app/quotes" onClick={() => setMenuOpen(false)}><Quote size={18} strokeWidth={1.5} />Quotes</Link>
+            <Link className="flex min-h-12 items-center gap-3 px-3 text-sm" href="/app/settings" onClick={() => setMenuOpen(false)}>Settings</Link>
+            <form action="/auth/signout" method="post"><button className="flex min-h-12 w-full items-center gap-3 px-3 text-left text-sm text-muted" type="submit">Sign out</button></form>
           </div>
         ) : null}
 
-        <main className="mx-auto w-full max-w-[1180px] px-4 pb-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom)+1.5rem)] pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-9">{children}</main>
+        <main className="mx-auto w-full max-w-[var(--content-width)] px-4 pb-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom)+1.5rem)] pt-8 sm:px-6 lg:px-11 lg:pb-12 lg:pt-10">{children}</main>
       </div>
 
-      <nav aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-[var(--border)] bg-[#11111c]/96 px-[max(.35rem,env(safe-area-inset-left))] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-        {primary.map(({ href, label, icon: Icon }) => {
+      <nav aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-rail px-[max(.35rem,env(safe-area-inset-left))] pb-[env(safe-area-inset-bottom)] lg:hidden">
+        {mobile.map(({ href, label, icon: Icon }) => {
           const active = isCurrent(pathname, href);
-          return <Link aria-current={active ? "page" : undefined} className={`flex min-h-[var(--mobile-nav-height)] flex-col items-center justify-center gap-1 text-[11px] ${active ? "text-accent-light" : "text-muted"}`} href={href} key={href}><Icon size={21} strokeWidth={active ? 2.4 : 1.8} />{label}</Link>;
+          return (
+            <Link
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-[var(--mobile-nav-height)] flex-col items-center justify-center gap-1.5 text-[10px] uppercase tracking-[.12em] ${active ? "text-gold-text" : "text-muted"}`}
+              href={href}
+              key={href}
+            >
+              <Icon size={19} strokeWidth={active ? 1.9 : 1.5} />
+              {label}
+            </Link>
+          );
         })}
       </nav>
     </div>
   );
-}
-
-function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: typeof Home; active: boolean }) {
-  return <Link aria-current={active ? "page" : undefined} className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm ${active ? "bg-accent/15 font-semibold text-accent-light" : "text-secondary hover:bg-white/5 hover:text-white"}`} href={href}><Icon size={19} />{label}</Link>;
 }

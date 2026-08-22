@@ -91,21 +91,22 @@ export function EmailAuthForm({ mode }: { mode: Mode }) {
       />
       {mode === "login" ? (
         <div className="text-right">
-          <Link className="inline-flex min-h-11 items-center text-sm text-accent-light" href="/forgot-password">
-            Forgot password?
-          </Link>
+          <Link className="text-xs text-gold-text" href="/forgot-password">Forgotten it?</Link>
         </div>
       ) : null}
       <Turnstile onToken={onCaptcha} />
-      {error ? <p className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-red-200" role="alert">{error}</p> : null}
-      <button className="primary-button w-full" disabled={submitting} type="submit">
+      {error ? <p className="border border-[var(--danger)] px-4 py-3 text-sm text-[var(--danger)]" role="alert">{error}</p> : null}
+      <button className="btn btn-primary btn-block min-h-[42px]" disabled={submitting} type="submit">
         {submitting ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
-      <p className="text-center text-sm text-secondary">
+      <p className="text-center text-xs text-muted">
         {mode === "signup" ? "Already have an account? " : "New to PageFlow? "}
-        <Link className="inline-flex min-h-11 items-center font-semibold text-accent-light" href={mode === "signup" ? "/login" : "/signup"}>
-          {mode === "signup" ? "Sign in" : "Create an account"}
+        <Link className="text-gold-text" href={mode === "signup" ? "/login" : "/signup"}>
+          {mode === "signup" ? "Sign in" : "Open an account"}
         </Link>
+      </p>
+      <p className="text-center text-[11.5px] leading-6 text-faint">
+        Protected by Turnstile. Your reading log is yours alone and exportable as JSON at any time.
       </p>
     </form>
   );
@@ -125,9 +126,9 @@ type AuthFieldProps = {
 function AuthField({ id, label, value, onChange, type = "text", autoComplete, required, hint }: AuthFieldProps) {
   return (
     <label className="block" htmlFor={id}>
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-muted">{label}</span>
+      <span className="field-label">{label}</span>
       <input
-        className="min-h-12 w-full rounded-2xl border border-[var(--border)] bg-black/20 px-4 text-base text-white placeholder:text-muted focus:border-accent-light"
+        className="input min-h-[42px]"
         id={id}
         type={type}
         value={value}
@@ -136,7 +137,7 @@ function AuthField({ id, label, value, onChange, type = "text", autoComplete, re
         required={required}
         aria-describedby={hint ? `${id}-hint` : undefined}
       />
-      {hint ? <span className="mt-2 block text-xs leading-5 text-muted" id={`${id}-hint`}>{hint}</span> : null}
+      {hint ? <span className="mt-2 block text-xs leading-5 text-faint" id={`${id}-hint`}>{hint}</span> : null}
     </label>
   );
 }

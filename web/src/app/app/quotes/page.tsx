@@ -15,9 +15,51 @@ export default async function QuotesPage({ searchParams }: { searchParams: Promi
   let quotes = needle ? rawQuotes?.filter((quote) => `${quote.text} ${quote.books?.title ?? ""}`.toLocaleLowerCase().includes(needle)) : rawQuotes;
   if (filters.random && quotes?.length) quotes = [quotes[Math.floor(Math.random() * quotes.length)]];
 
-  return <><PageHeading eyebrow="Words worth keeping" title="Quotes" description="Collect favorite lines and turn any quote into a shareable image." />
-    <form className="glass-card mb-5 flex gap-3 rounded-2xl p-4" method="get"><input aria-label="Search quotes" className="min-h-12 min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-black/20 px-4" defaultValue={filters.q} name="q" placeholder="Search quotes or books" /><button className="secondary-button px-4">Search</button><button aria-label="Random quote" className="secondary-button px-4" name="random" value="1"><Shuffle size={18} /></button></form>
-    <details className="glass-card mb-6 rounded-2xl p-5"><summary className="min-h-11 cursor-pointer font-semibold text-accent-light">Add a quote</summary><form action={saveQuote} className="mt-4 space-y-4"><select className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[#141424] px-4" defaultValue="" name="bookId" required><option disabled value="">Choose a book</option>{books?.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}</select><textarea className="min-h-32 w-full rounded-xl border border-[var(--border)] bg-black/20 p-4" name="text" placeholder="The line you want to remember…" required /><button className="primary-button w-full">Save quote</button></form></details>
-    {quotes?.length ? <div className="grid gap-5 lg:grid-cols-2">{quotes.map((quote) => <QuoteCard books={books ?? []} key={quote.id} quote={{ id: quote.id, book_id: quote.book_id, text: quote.text, bookTitle: quote.books?.title ?? "Unknown book" }} />)}</div> : <div className="glass-card rounded-2xl p-8 text-center text-secondary">No quotes match this view.</div>}
-  </>;
+  return (
+    <>
+      <PageHeading
+        action={
+          <>
+            <a className="btn btn-secondary" href="/app/quotes?random=1"><Shuffle size={15} strokeWidth={1.5} />Draw one at random</a>
+            <a className="btn btn-primary" href="#copy-out">Copy out a line</a>
+          </>
+        }
+        eyebrow="Words worth keeping"
+        title="Quotes"
+      />
+
+      <form className="flex items-center gap-3 border-y border-line py-3.5" method="get">
+        <input aria-label="Search lines or volumes" className="input flex-1" defaultValue={filters.q} name="q" placeholder="Search lines or volumes" />
+        <button className="btn btn-secondary" type="submit">Search</button>
+      </form>
+
+      <details className="plate mb-9 mt-8 px-5 py-4" id="copy-out">
+        <summary className="cursor-pointer font-display text-[20px] text-gold-text">Copy out a line</summary>
+        <form action={saveQuote} className="mt-5 grid gap-4">
+          <label className="block">
+            <span className="field-label">Volume</span>
+            <select className="input" defaultValue="" name="bookId" required>
+              <option disabled value="">Choose a volume</option>
+              {books?.map((book) => <option key={book.id} value={book.id}>{book.title}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="field-label">The line</span>
+            <textarea className="input" name="text" placeholder="The line you want to remember…" required />
+          </label>
+          <button className="btn btn-primary btn-block" type="submit">Keep this line</button>
+        </form>
+      </details>
+
+      {quotes?.length ? (
+        <div className="grid gap-8 lg:grid-cols-2">
+          {quotes.map((quote) => (
+            <QuoteCard books={books ?? []} key={quote.id} quote={{ id: quote.id, book_id: quote.book_id, text: quote.text, bookTitle: quote.books?.title ?? "Unattributed" }} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-10 text-center text-sm text-muted">No lines match this view.</p>
+      )}
+    </>
+  );
 }
