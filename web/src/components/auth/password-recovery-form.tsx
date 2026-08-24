@@ -51,12 +51,10 @@ export function PasswordRecoveryForm({ mode }: { mode: "request" | "reset" }) {
   return (
     <form className="space-y-4" onSubmit={submit}>
       <label className="block" htmlFor={mode === "request" ? "recovery-email" : "new-password"}>
-        <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-muted">
-          {mode === "request" ? "Email" : "New password"}
-        </span>
+        <span className="field-label">{mode === "request" ? "Email" : "New password"}</span>
         <input
           autoComplete={mode === "request" ? "email" : "new-password"}
-          className="min-h-12 w-full rounded-2xl border border-[var(--border)] bg-black/20 px-4 text-base text-white focus:border-accent-light"
+          className="input min-h-[42px]"
           id={mode === "request" ? "recovery-email" : "new-password"}
           onChange={(event) => setValue(event.target.value)}
           required
@@ -66,23 +64,23 @@ export function PasswordRecoveryForm({ mode }: { mode: "request" | "reset" }) {
       </label>
       {mode === "reset" ? (
         <label className="block" htmlFor="confirm-password">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-muted">Confirm password</span>
+          <span className="field-label">Confirm password</span>
           <input
             autoComplete="new-password"
-            className="min-h-12 w-full rounded-2xl border border-[var(--border)] bg-black/20 px-4 text-base text-white focus:border-accent-light"
+            className="input min-h-[42px]"
             id="confirm-password"
             onChange={(event) => setConfirmation(event.target.value)}
             required
             type="password"
             value={confirmation}
           />
-          <span className="mt-2 block text-xs leading-5 text-muted">12+ characters with uppercase, lowercase, a number, and a symbol.</span>
+          <span className="mt-2 block text-xs leading-5 text-faint">12+ characters with uppercase, lowercase, a number, and a symbol.</span>
         </label>
       ) : null}
       {mode === "request" ? <Turnstile onToken={onCaptcha} /> : null}
-      {error ? <p className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-red-200" role="alert">{error}</p> : null}
-      {message ? <p className="rounded-xl border border-success/30 bg-success/10 p-3 text-sm text-emerald-100" role="status">{message}</p> : null}
-      <button className="primary-button w-full" disabled={submitting} type="submit">
+      {error ? <p className="border border-[var(--danger)] px-4 py-3 text-sm text-[var(--danger)]" role="alert">{error}</p> : null}
+      {message ? <p className="border border-[var(--success)] px-4 py-3 text-sm text-[var(--success)]" role="status">{message}</p> : null}
+      <button className="btn btn-primary btn-block min-h-[42px]" disabled={submitting} type="submit">
         {submitting ? "Working…" : mode === "request" ? "Send recovery link" : "Save new password"}
       </button>
     </form>

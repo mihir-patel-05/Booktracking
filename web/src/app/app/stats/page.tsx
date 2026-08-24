@@ -1,13 +1,8 @@
-import { Flame, Snowflake, Sparkles, Trophy } from "lucide-react";
 import { PageHeading } from "@/components/app/page-heading";
+import { Attendance, Figure, FigureBand, Meter, SectionHeading } from "@/components/app/register";
+import { dateOffset, localDate } from "@/lib/dates";
+import { roman } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-
-function localDate(timeZone: string, date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
-  const value = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
-  return `${value.year}-${value.month}-${value.day}`;
-}
-function dateOffset(date: string, days: number) { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10); }
 
 export default async function StatsPage() {
   const supabase = await createClient();
@@ -24,19 +19,84 @@ export default async function StatsPage() {
     supabase.from("reading_sessions").select("session_local_date,duration_seconds,mood_tags").gte("session_local_date", firstDay).lte("session_local_date", today),
     supabase.from("streak_freezes").select("id,missed_date").eq("month_start", monthStart),
   ]);
-  const daily = new Map<string, number>(); const moodCounts = new Map<string, number>();
-  for (const session of sessions ?? []) { daily.set(session.session_local_date, (daily.get(session.session_local_date) ?? 0) + session.duration_seconds); for (const mood of session.mood_tags as string[]) moodCounts.set(mood, (moodCounts.get(mood) ?? 0) + 1); }
-  const days = Array.from({ length: 28 }, (_, index) => dateOffset(firstDay, index));
-  const weeklySeconds = days.slice(-7).reduce((sum, date) => sum + (daily.get(date) ?? 0), 0);
-  const moodTotal = [...moodCounts.values()].reduce((sum, value) => sum + value, 0);
-  const totalXp = stats?.total_xp ?? 0; const level = Math.floor(totalXp / 100) + 1; const levelXp = totalXp % 100;
 
-  return <><PageHeading eyebrow="Your momentum" title="Reading stats" description={`Dates follow ${timeZone}, so streaks stay deterministic through travel and daylight-saving changes.`} />
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={<Flame />} label="Current streak" value={`${stats?.current_streak ?? 0} days`} /><Metric icon={<Trophy />} label="Longest streak" value={`${stats?.longest_streak ?? 0} days`} /><Metric icon={<Sparkles />} label="Total XP" value={String(totalXp)} /><Metric icon={<Snowflake />} label="Freezes left" value={`${Math.max(0, 2 - (freezes?.length ?? 0))} this month`} /></section>
-    <div className="mt-6 grid gap-6 xl:grid-cols-2"><section className="glass-card rounded-2xl p-5"><div className="flex items-end justify-between"><div><p className="text-xs uppercase tracking-[.12em] text-muted">Level {level}</p><h2 className="font-display text-2xl">{levelXp} / 100 XP</h2></div><p className="text-sm text-secondary">{stats?.total_sessions ?? 0} sessions</p></div><div className="mt-4 h-3 overflow-hidden rounded-full bg-black/30"><div className="h-full rounded-full bg-gradient-to-r from-accent to-fuchsia-500" style={{ width: `${levelXp}%` }} /></div><div className="mt-6 grid grid-cols-2 gap-3"><Mini label="Last 7 days" value={`${Math.round(weeklySeconds / 60)} min`} /><Mini label="All time" value={`${Math.round(Number(stats?.total_seconds ?? 0) / 3600)} hr`} /></div></section>
-      <section className="glass-card rounded-2xl p-5"><h2 className="font-display text-2xl">Mood distribution</h2>{moodTotal ? <div className="mt-4 space-y-3">{[...moodCounts.entries()].sort((a,b) => b[1]-a[1]).map(([mood,count]) => <div key={mood}><div className="flex justify-between text-sm"><span>{mood}</span><span className="text-muted">{Math.round(count/moodTotal*100)}%</span></div><div className="mt-1 h-2 rounded-full bg-black/30"><div className="h-full rounded-full bg-accent-light" style={{ width: `${count/moodTotal*100}%` }} /></div></div>)}</div> : <p className="mt-4 text-sm text-secondary">Add moods after reading to reveal your pattern.</p>}</section></div>
-    <section className="glass-card mt-6 rounded-2xl p-5"><div className="mb-4 flex items-end justify-between"><div><p className="text-xs uppercase tracking-[.12em] text-muted">Last 28 days</p><h2 className="font-display text-2xl">Reading heatmap</h2></div><p className="text-xs text-muted">darker = longer</p></div><div className="grid grid-cols-7 gap-2">{days.map((date) => { const minutes = Math.round((daily.get(date) ?? 0)/60); const intensity = minutes === 0 ? 0 : Math.min(4, Math.ceil(minutes/15)); return <div aria-label={`${date}: ${minutes} minutes`} className={`aspect-square rounded-md border border-white/5 ${["bg-white/5","bg-violet-950","bg-violet-800","bg-violet-600","bg-violet-400"][intensity]}`} key={date} title={`${date}: ${minutes} min`} />; })}</div></section>
-  </>;
+  const daily = new Map<string, number>();
+  const moodCounts = new Map<string, number>();
+  for (const session of sessions ?? []) {
+    daily.set(session.session_local_date, (daily.get(session.session_local_date) ?? 0) + session.duration_seconds);
+    for (const mood of session.mood_tags as string[]) moodCounts.set(mood, (moodCounts.get(mood) ?? 0) + 1);
+  }
+  const days = Array.from({ length: 28 }, (_, index) => {
+    const date = dateOffset(firstDay, index);
+    return { date, minutes: Math.round((daily.get(date) ?? 0) / 60) };
+  });
+  const weeklySeconds = days.slice(-7).reduce((sum, day) => sum + day.minutes * 60, 0);
+  const moodTotal = [...moodCounts.values()].reduce((sum, value) => sum + value, 0);
+  const ranked = [...moodCounts.entries()].sort((a, b) => b[1] - a[1]);
+
+  const totalXp = stats?.total_xp ?? 0;
+  const level = Math.floor(totalXp / 100) + 1;
+  const levelXp = totalXp % 100;
+
+  return (
+    <>
+      <PageHeading
+        description="Dates are kept in your own time zone, so a streak survives travel and the clocks changing."
+        eyebrow="Your momentum"
+        title="The record"
+      />
+
+      <FigureBand cols={5}>
+        <Figure label="Current streak" unit="days" value={stats?.current_streak ?? 0} />
+        <Figure label="Longest streak" unit="days" value={stats?.longest_streak ?? 0} />
+        <Figure label="Total XP" value={totalXp} />
+        <Figure label="Sittings" value={stats?.total_sessions ?? 0} />
+        <Figure label="Freezes left" unit="this month" value={Math.max(0, 2 - (freezes?.length ?? 0))} />
+      </FigureBand>
+
+      <div className="mt-11 grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-14">
+        <section>
+          <SectionHeading note="One square to a day; the darker the ink, the longer the sitting." title="Attendance, last twenty-eight days" />
+          <Attendance days={days} />
+          <div className="tnum mt-3 flex justify-between text-[10.5px] uppercase tracking-[.12em] text-muted">
+            <span>{firstDay}</span>
+            <span>{Math.round(weeklySeconds / 60)} min in the last seven</span>
+          </div>
+        </section>
+
+        <section>
+          <SectionHeading title={`Standing — Level ${roman(level)}`} />
+          <div className="plate px-6 py-5">
+            <div className="tnum flex items-baseline justify-between">
+              <span className="font-display text-[30px]">{levelXp} <span className="font-sans text-[15px] text-muted">/ 100 XP</span></span>
+              <span className="text-[13px] text-muted">toward Level {roman(level + 1)}</span>
+            </div>
+            <div className="mt-4"><Meter value={levelXp} /></div>
+            <p className="tnum mt-5 border-t border-line-soft pt-4 text-[13.5px] text-secondary">
+              {Math.round(Number(stats?.total_seconds ?? 0) / 3600)} hours logged in all
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <SectionHeading note="Every mood you have set against a sitting." title="Moods recorded" />
+            {moodTotal ? (
+              <div className="flex flex-col">
+                {ranked.map(([mood, count]) => (
+                  <div className="border-b border-line-soft py-3 last:border-b-0" key={mood}>
+                    <div className="tnum mb-2 flex justify-between text-[13.5px]">
+                      <span>{mood}</span>
+                      <span className="text-muted">{Math.round((count / moodTotal) * 100)}%</span>
+                    </div>
+                    <Meter thickness={2} value={(count / moodTotal) * 100} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted">Set a mood after a sitting and the pattern begins.</p>
+            )}
+          </div>
+        </section>
+      </div>
+    </>
+  );
 }
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="glass-card rounded-2xl p-4"><span className="text-accent-light">{icon}</span><p className="mt-4 text-xs uppercase tracking-[.12em] text-muted">{label}</p><p className="mt-1 font-display text-2xl">{value}</p></div>; }
-function Mini({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-black/20 p-3"><p className="text-xs text-muted">{label}</p><p className="mt-1 font-semibold">{value}</p></div>; }

@@ -1,59 +1,135 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "DM Sans";
-  src: url("/fonts/DMSans-Regular.ttf") format("truetype");
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Playfair Display";
-  src: url("/fonts/PlayfairDisplay-Regular.ttf") format("truetype");
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Playfair Display";
-  src: url("/fonts/PlayfairDisplay-Italic.ttf") format("truetype");
-  font-display: swap;
-  font-style: italic;
-}
+/* ──────────────────────────────────────────────────────────────────────────
+   PageFlow — "a reading register".
+   Two lights: Paper (warm near-white, ink black) and Night (warm near-black,
+   gilt accent). Paper is the default; Night follows the system unless the
+   reader has chosen explicitly via data-theme on <html>.
+   ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --background: #0d0d0d;
-  --surface: #1a1a2e;
-  --surface-mid: #1e1e38;
-  --surface-light: #222240;
-  --foreground: #ffffff;
-  --text-secondary: #a7a7b5;
-  --text-muted: #727283;
-  --border: rgba(124, 58, 237, 0.2);
-  --border-strong: rgba(167, 139, 250, 0.38);
-  --accent: #7c3aed;
-  --accent-light: #a78bfa;
-  --accent-bright: #a855f7;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  /* Paper */
+  --background: #f3f2f2;
+  --rail: #f0eeec;
+  --surface: #f0eeec;
+  --panel: #f8f4f4;
+
+  --foreground: #201f1d;
+  --text-secondary: rgba(32, 31, 29, 0.72);
+  --text-muted: rgba(32, 31, 29, 0.56);
+  --text-faint: rgba(32, 31, 29, 0.45);
+
+  --border: rgba(32, 31, 29, 0.16);
+  --border-soft: rgba(32, 31, 29, 0.12);
+  --border-strong: rgba(32, 31, 29, 0.3);
+
+  --gold: #b68235;
+  --gold-text: #7d5411;
+  --gold-tint: rgba(182, 130, 53, 0.1);
+  --gold-wash: rgba(182, 130, 53, 0.3);
+
+  --success: #4a6b4f;
+  --warning: #a06f24;
+  --danger: #8c3a30;
+
+  --shadow-sm: 0 1px 2px rgba(45, 43, 43, 0.14);
+  --shadow-md: 0 3px 10px rgba(45, 43, 43, 0.16);
+  --shadow-lg: 0 24px 64px rgba(45, 43, 43, 0.28);
+
   --content-width: 1180px;
+  --rail-width: 264px;
   --mobile-nav-height: 76px;
+
+  --font-heading: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-body: var(--font-lora), "Lora", Georgia, serif;
+}
+
+/* Night, chosen explicitly — on the document, or on any subtree that is
+   its own room (the timer). */
+:root[data-theme="night"],
+.night {
+  --background: #1a1917;
+  --rail: #211f1c;
+  --surface: #211f1c;
+  --panel: #242220;
+
+  --foreground: #f3f2f2;
+  --text-secondary: rgba(243, 242, 242, 0.72);
+  --text-muted: rgba(243, 242, 242, 0.56);
+  --text-faint: rgba(243, 242, 242, 0.44);
+
+  --border: rgba(243, 242, 242, 0.16);
+  --border-soft: rgba(243, 242, 242, 0.1);
+  --border-strong: rgba(243, 242, 242, 0.28);
+
+  --gold: #e1ad66;
+  --gold-text: #e1ad66;
+  --gold-tint: rgba(225, 173, 102, 0.13);
+  --gold-wash: rgba(225, 173, 102, 0.28);
+
+  --success: #8fae93;
+  --warning: #e1ad66;
+  --danger: #d99287;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 3px 10px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+/* Night, following the system. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="paper"]):not([data-theme="night"]) {
+    --background: #1a1917;
+    --rail: #211f1c;
+    --surface: #211f1c;
+    --panel: #242220;
+
+    --foreground: #f3f2f2;
+    --text-secondary: rgba(243, 242, 242, 0.72);
+    --text-muted: rgba(243, 242, 242, 0.56);
+    --text-faint: rgba(243, 242, 242, 0.44);
+
+    --border: rgba(243, 242, 242, 0.16);
+    --border-soft: rgba(243, 242, 242, 0.1);
+    --border-strong: rgba(243, 242, 242, 0.28);
+
+    --gold: #e1ad66;
+    --gold-text: #e1ad66;
+    --gold-tint: rgba(225, 173, 102, 0.13);
+    --gold-wash: rgba(225, 173, 102, 0.28);
+
+      --success: #8fae93;
+    --warning: #e1ad66;
+    --danger: #d99287;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 3px 10px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+
+    color-scheme: dark;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-rail: var(--rail);
   --color-surface: var(--surface);
-  --color-surface-mid: var(--surface-mid);
-  --color-surface-light: var(--surface-light);
+  --color-panel: var(--panel);
   --color-foreground: var(--foreground);
   --color-secondary: var(--text-secondary);
   --color-muted: var(--text-muted);
-  --color-accent: var(--accent);
-  --color-accent-light: var(--accent-light);
+  --color-faint: var(--text-faint);
+  --color-line: var(--border);
+  --color-line-soft: var(--border-soft);
+  --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
 }
 
 * { box-sizing: border-box; }
@@ -61,7 +137,6 @@
 html {
   min-height: 100%;
   background: var(--background);
-  color-scheme: dark;
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
 }
@@ -69,15 +144,21 @@ html {
 body {
   min-height: 100svh;
   margin: 0;
-  background:
-    radial-gradient(circle at 90% -10%, rgba(124, 58, 237, 0.2), transparent 34rem),
-    radial-gradient(circle at -15% 75%, rgba(76, 29, 149, 0.13), transparent 28rem),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
-  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
-button, input, textarea, select { font: inherit; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+button, input, textarea, select { font: inherit; color: inherit; }
 button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 button, a { touch-action: manipulation; }
 a { color: inherit; text-decoration: none; }
@@ -87,47 +168,125 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--accent-light);
-  outline-offset: 3px;
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
-::selection { background: rgba(167, 139, 250, 0.35); }
-.font-display { font-family: "Playfair Display", Georgia, serif; }
+::selection { background: var(--gold-wash); }
 
-.glass-card {
-  border: 1px solid var(--border);
-  background: linear-gradient(145deg, rgba(30, 30, 56, 0.94), rgba(20, 20, 38, 0.94));
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
+.font-display { font-family: var(--font-heading); }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* — the eyebrow: small caps set in ink or gilt, used above every heading — */
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
+.eyebrow-muted { color: var(--text-muted); letter-spacing: 0.18em; }
 
-.primary-button,
-.secondary-button {
+/* — rules — */
+.rule { height: 1px; border: 0; background: var(--border); }
+
+/* — buttons — */
+.btn {
   display: inline-flex;
-  min-height: 48px;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border-radius: 1rem;
-  padding: 0.8rem 1.25rem;
-  color: white;
-  font-weight: 700;
+  gap: 6px;
   cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 9px 17px;
+  border-radius: 4px;
 }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { color: var(--gold-text); border-color: var(--gold); }
+.btn-primary:hover { background: var(--gold-tint); }
+.btn-secondary { border-color: var(--border); }
+.btn-secondary:hover { background: color-mix(in srgb, var(--foreground) 7%, transparent); }
+.btn-ghost { color: var(--gold-text); padding-inline: 5px; }
+.btn-ghost:hover { background: var(--gold-tint); }
+.btn-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.btn-icon { width: 36px; height: 36px; padding: 0; }
+.btn-block { width: 100%; }
 
-.primary-button {
-  border: 0;
-  background: linear-gradient(135deg, var(--accent), var(--accent-bright));
-  box-shadow: 0 12px 34px rgba(124, 58, 237, 0.3);
+/* — forms — */
+.field > label,
+.field-label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: var(--text-secondary);
 }
-
-.secondary-button {
-  border: 1px solid var(--border-strong);
-  background: rgba(26, 26, 46, 0.76);
+.input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--foreground);
+  caret-color: var(--gold);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
+.input::placeholder { color: var(--text-faint); }
+.input:hover { border-color: var(--border-strong); }
+.input:focus-visible { border-color: var(--gold); outline-offset: 0; }
+textarea.input { min-height: 90px; resize: vertical; line-height: 1.7; }
+select.input { background: var(--background); }
 
-.primary-button:disabled,
-.secondary-button:disabled { cursor: not-allowed; opacity: 0.5; }
+/* — tags — */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.tag-accent { background: var(--gold-tint); color: var(--gold-text); }
+.tag-neutral { background: color-mix(in srgb, var(--foreground) 7%, transparent); color: var(--text-secondary); }
+.tag-outline { border-color: var(--gold); color: var(--gold-text); }
+
+/* — tables: the register — */
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.table td {
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.table tbody tr:hover { background: color-mix(in srgb, var(--foreground) 4%, transparent); }
+
+/* — the plate: a bordered panel, the design's recurring container — */
+.plate {
+  border: 1px solid var(--border);
+  background: transparent;
+}
+.plate-filled { background: var(--panel); }
+
+/* — progress: a hairline with a gilt fill — */
+.meter { height: 3px; background: var(--border-soft); }
+.meter > span { display: block; height: 3px; background: var(--gold); }
 
 .safe-page {
   min-height: 100svh;

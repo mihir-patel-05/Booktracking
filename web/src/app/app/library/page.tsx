@@ -2,18 +2,122 @@ import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { AddBookSheet } from "@/components/books/add-book-sheet";
 import { PageHeading } from "@/components/app/page-heading";
+import { Meter } from "@/components/app/register";
+import { percentRead } from "@/lib/format";
+import { SHELVES, SHELF_BY_STATUS } from "@/lib/shelves";
 import { createClient } from "@/lib/supabase/server";
 import { deleteBook } from "./actions";
 
-export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status } = await searchParams;
-  const supabase = await createClient();
-  let query = supabase.from("books").select("id,title,author,cover_url,total_pages,current_page,status").order("updated_at", { ascending: false });
-  if (["Want to Read", "Currently Reading", "Completed", "Abandoned"].includes(status ?? "")) query = query.eq("status", status!);
-  const { data: books } = await query;
+export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
+  const { status, q } = await searchParams;
+  const shelf = SHELF_BY_STATUS.has(status ?? "") ? status! : undefined;
 
-  return <><PageHeading eyebrow="Your shelves" title="Library" description="Search Google Books or add any title manually." action={<AddBookSheet />} />
-    <div className="mb-5 flex gap-2 overflow-x-auto pb-2">{["All", "Currently Reading", "Want to Read", "Completed"].map((item) => <Link className={`flex min-h-11 shrink-0 items-center rounded-xl border px-4 text-sm ${(!status && item === "All") || status === item ? "border-accent bg-accent/15 text-accent-light" : "border-[var(--border)] text-secondary"}`} href={item === "All" ? "/app/library" : `/app/library?status=${encodeURIComponent(item)}`} key={item}>{item}</Link>)}</div>
-    {books?.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{books.map((book) => <article className="glass-card group rounded-2xl p-5" key={book.id}><Link className="block min-h-24" href={`/app/books/${book.id}`}><p className="font-display text-xl leading-snug">{book.title}</p><p className="mt-1 text-sm text-secondary">{book.author}</p><p className="mt-4 text-xs uppercase tracking-[.1em] text-accent-light">{book.status}</p><p className="mt-2 text-xs text-muted">{book.current_page} / {book.total_pages} pages</p></Link><form action={deleteBook} className="mt-3 border-t border-[var(--border)] pt-2"><input name="id" type="hidden" value={book.id} /><button className="flex min-h-11 items-center gap-2 text-sm text-red-200" type="submit"><Trash2 size={16} />Delete</button></form></article>)}</div> : <div className="glass-card rounded-2xl p-8 text-center text-secondary">No books on this shelf yet.</div>}
-  </>;
+  const supabase = await createClient();
+  let query = supabase.from("books").select("id,title,author,total_pages,current_page,status,updated_at").order("updated_at", { ascending: false });
+  if (shelf) query = query.eq("status", shelf);
+
+  const [{ data: books }, { data: all }, { data: recent }] = await Promise.all([
+    query,
+    supabase.from("books").select("status"),
+    supabase.from("reading_sessions").select("book_id,session_local_date").order("session_local_date", { ascending: false }).limit(500),
+  ]);
+
+  const lastRead = new Map<string, string>();
+  for (const session of recent ?? []) if (!lastRead.has(session.book_id)) lastRead.set(session.book_id, session.session_local_date);
+
+  const counts = new Map<string, number>();
+  for (const book of all ?? []) counts.set(book.status, (counts.get(book.status) ?? 0) + 1);
+
+  const needle = q?.trim().toLocaleLowerCase();
+  const rows = (needle ? books?.filter((book) => `${book.title} ${book.author}`.toLocaleLowerCase().includes(needle)) : books) ?? [];
+  const total = all?.length ?? 0;
+
+  return (
+    <>
+      <PageHeading
+        action={<AddBookSheet />}
+        description="Every volume you have entered, searched from Google Books or catalogued by hand."
+        eyebrow="Your shelves"
+        title="Library"
+      />
+
+      <div className="flex flex-col gap-4 border-y border-line py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex gap-6 overflow-x-auto text-[12.5px]">
+          <ShelfLink active={!shelf} count={total} href="/app/library" label="All" />
+          {SHELVES.map((entry) => (
+            <ShelfLink
+              active={shelf === entry.status}
+              count={counts.get(entry.status) ?? 0}
+              href={`/app/library?status=${encodeURIComponent(entry.status)}`}
+              key={entry.status}
+              label={entry.label}
+            />
+          ))}
+        </div>
+        <form className="flex items-center gap-2.5" method="get">
+          {shelf ? <input name="status" type="hidden" value={shelf} /> : null}
+          <input aria-label="Search title or author" className="input w-full lg:w-[230px]" defaultValue={q} name="q" placeholder="Search title or author" />
+          <button className="btn btn-secondary" type="submit">Search</button>
+        </form>
+      </div>
+
+      {rows.length ? (
+        <table className="table mt-1">
+          <thead>
+            <tr>
+              <th className="w-[46px]">No.</th>
+              <th>Title</th>
+              <th className="hidden w-[190px] md:table-cell">Author</th>
+              <th className="hidden w-[130px] sm:table-cell">Standing</th>
+              <th className="hidden w-[170px] lg:table-cell">Progress</th>
+              <th className="hidden w-[110px] text-right lg:table-cell">Last read</th>
+              <th className="w-[44px]"><span className="sr-only">Remove</span></th>
+            </tr>
+          </thead>
+          <tbody className="tnum">
+            {rows.map((book, index) => {
+              const entry = SHELF_BY_STATUS.get(book.status);
+              const pct = percentRead(book.current_page, book.total_pages);
+              const read = lastRead.get(book.id);
+              return (
+                <tr key={book.id}>
+                  <td className="text-faint">{String(rows.length - index).padStart(3, "0")}</td>
+                  <td>
+                    <Link className="font-display text-[19px] leading-snug" href={`/app/books/${book.id}`}>{book.title}</Link>
+                    <span className="block text-xs text-muted md:hidden">{book.author}</span>
+                  </td>
+                  <td className="hidden md:table-cell">{book.author}</td>
+                  <td className="hidden sm:table-cell"><span className={`tag ${entry?.tag ?? "tag-neutral"}`}>{entry?.label ?? book.status}</span></td>
+                  <td className="hidden lg:table-cell"><Meter caption={`${book.current_page} / ${book.total_pages}`} thickness={2} value={pct} /></td>
+                  <td className="hidden text-right text-secondary lg:table-cell">{read ?? "—"}</td>
+                  <td className="text-right">
+                    <form action={deleteBook}>
+                      <input name="id" type="hidden" value={book.id} />
+                      <button aria-label={`Remove ${book.title}`} className="btn btn-ghost text-muted hover:text-[var(--danger)]" type="submit"><Trash2 size={15} strokeWidth={1.5} /></button>
+                    </form>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : (
+        <p className="mt-10 text-center text-sm text-muted">No volumes stand on this shelf yet.</p>
+      )}
+
+      {rows.length ? <p className="mt-5 text-xs text-muted">Showing {rows.length} of {total}</p> : null}
+    </>
+  );
+}
+
+function ShelfLink({ href, label, count, active }: { href: string; label: string; count: number; active: boolean }) {
+  return (
+    <Link
+      aria-current={active ? "page" : undefined}
+      className={`shrink-0 whitespace-nowrap pb-0.5 ${active ? "border-b border-gold text-gold-text" : "text-secondary hover:text-foreground"}`}
+      href={href}
+    >
+      {label} <span className="tnum text-faint">{count}</span>
+    </Link>
+  );
 }

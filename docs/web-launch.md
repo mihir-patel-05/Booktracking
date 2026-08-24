@@ -6,7 +6,7 @@ PageFlow web is an iPhone-first Next.js 15 application in `web/`. MacBook browse
 
 The legacy native checkout uses SwiftData for local persistence and Firebase Firestore/Auth for remote data. The web application does not read or migrate either system. It uses a fresh Supabase project for all authentication and persistent application data.
 
-The committed Supabase migrations create `profiles`, `books`, `reading_sessions`, `session_notes`, `quotes`, `streak_freezes`, and `user_stats`. Every exposed table has RLS, explicit authenticated grants, anonymous revocation, and ownership predicates. Composite foreign keys prevent a record from referencing another user's book or session. `finalize_reading_session` is a security-invoker RPC that calculates XP and refreshes streak/stat caches in the database.
+The committed Supabase migrations create `profiles`, `books`, `reading_sessions`, `session_notes`, `quotes`, `reading_plans`, `streak_freezes`, and `user_stats`. Every exposed table has RLS, explicit authenticated grants, anonymous revocation, and ownership predicates. Composite foreign keys prevent a record from referencing another user's book or session. `finalize_reading_session` is a security-invoker RPC that calculates XP and refreshes streak/stat caches in the database.
 
 ## Local verification
 
