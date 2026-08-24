@@ -15,3 +15,8 @@ test("protected pages redirect to authentication without configuration", async (
   await expect(page).toHaveURL(/\/login\?error=configuration/);
   await expect(page.getByRole("heading", { name: /^sign in$/i })).toBeVisible();
 });
+
+test("the reading diary is behind authentication too", async ({ page }) => {
+  await page.goto("/app/calendar?month=2026-08");
+  await expect(page).toHaveURL(/\/login\?error=configuration/);
+});

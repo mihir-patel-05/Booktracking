@@ -3,19 +3,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { BarChart3, Home, Library, Menu, Quote, StickyNote, Timer, X } from "lucide-react";
+import { BarChart3, CalendarDays, Home, Library, Menu, Quote, StickyNote, Timer, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 const nav = [
   { href: "/app", label: "Today", icon: Home },
   { href: "/app/library", label: "Library", icon: Library },
+  { href: "/app/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/app/timer", label: "Timer", icon: Timer },
   { href: "/app/notes", label: "Notes", icon: StickyNote },
   { href: "/app/quotes", label: "Quotes", icon: Quote },
   { href: "/app/stats", label: "Statistics", icon: BarChart3 },
 ];
 
-const mobile = nav.filter((item) => item.href !== "/app/quotes");
+/* The bottom bar carries five; the commonplace book and the margins keep to the menu. */
+const mobile = nav.filter((item) => item.href !== "/app/quotes" && item.href !== "/app/notes");
 
 function isCurrent(pathname: string, href: string) {
   return href === "/app" ? pathname === href : pathname.startsWith(href);
@@ -92,6 +94,7 @@ export function AppShell({ children, displayName }: { children: ReactNode; displ
 
         {menuOpen ? (
           <div className="fixed inset-x-4 top-[calc(4rem+env(safe-area-inset-top))] z-30 border border-line bg-panel p-2 shadow-[var(--shadow-lg)] lg:hidden">
+            <Link className="flex min-h-12 items-center gap-3 px-3 text-sm" href="/app/notes" onClick={() => setMenuOpen(false)}><StickyNote size={18} strokeWidth={1.5} />Notes</Link>
             <Link className="flex min-h-12 items-center gap-3 px-3 text-sm" href="/app/quotes" onClick={() => setMenuOpen(false)}><Quote size={18} strokeWidth={1.5} />Quotes</Link>
             <Link className="flex min-h-12 items-center gap-3 px-3 text-sm" href="/app/settings" onClick={() => setMenuOpen(false)}>Settings</Link>
             <form action="/auth/signout" method="post"><button className="flex min-h-12 w-full items-center gap-3 px-3 text-left text-sm text-muted" type="submit">Sign out</button></form>

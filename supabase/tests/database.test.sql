@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(13);
 
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data)
 values
@@ -28,6 +28,16 @@ select is(
   'the atomic finalizer calculates XP on the server'
 );
 select is((select total_xp from public.user_stats), 25, 'cached statistics reflect finalized XP');
+select lives_ok(
+  $$insert into public.reading_plans (book_id, planned_date, target_minutes) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-08-20', 30)$$,
+  'an authenticated user can plan a volume for a day'
+);
+select throws_ok(
+  $$insert into public.reading_plans (book_id, planned_date) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-08-20')$$,
+  '23505',
+  'duplicate key value violates unique constraint "reading_plans_user_id_planned_date_book_id_key"',
+  'the same volume is entered in the diary once a day'
+);
 select throws_ok(
   $$update public.books set user_id = '22222222-2222-4222-8222-222222222222' where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   '42501',
@@ -42,6 +52,12 @@ select throws_ok(
   '23503',
   'insert or update on table "session_notes" violates foreign key constraint "session_notes_book_owner_fk"',
   'records cannot link across owners'
+);
+select throws_ok(
+  $$insert into public.reading_plans (book_id, planned_date) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-08-21')$$,
+  '23503',
+  'insert or update on table "reading_plans" violates foreign key constraint "reading_plans_book_owner_fk"',
+  'a plan cannot be laid against a volume owned by another reader'
 );
 
 set local role anon;
