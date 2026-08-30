@@ -1,8 +1,8 @@
 "use client";
 
-import { Target } from "lucide-react";
+import { Target, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { createGoal, updateGoal, type GoalActionState } from "@/app/app/goals/actions";
+import { createGoal, deleteGoal, updateGoal, type DeleteGoalState, type GoalActionState } from "@/app/app/goals/actions";
 
 type GoalValues = {
   id?: string;
@@ -53,6 +53,25 @@ export function GoalEditForm({ goal }: { goal: GoalValues }) {
         <button className="btn btn-secondary btn-block mt-4" disabled={pending} type="submit">{pending ? "Saving…" : "Save the terms"}</button>
       </form>
     </details>
+  );
+}
+
+export function DeleteGoalButton({ goalId, goalName, label }: { goalId: string; goalName: string; label?: string }) {
+  const [state, action, pending] = useActionState<DeleteGoalState, FormData>(deleteGoal, {});
+  return (
+    <form
+      action={action}
+      className="flex items-center gap-1"
+      onSubmit={(event) => {
+        if (!window.confirm(`Delete “${goalName}” permanently? Its books will stay in your library.`)) event.preventDefault();
+      }}
+    >
+      <input name="id" type="hidden" value={goalId} />
+      {state.error ? <span className="text-[11px] text-[var(--danger)]" role="alert">{state.error}</span> : null}
+      <button aria-label={label ? undefined : `Delete ${goalName}`} className="btn btn-ghost text-[var(--danger)]" disabled={pending} type="submit">
+        <Trash2 size={14} strokeWidth={1.5} />{label ? (pending ? "Deleting…" : label) : null}
+      </button>
+    </form>
   );
 }
 

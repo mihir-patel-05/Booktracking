@@ -22,6 +22,7 @@ const goalFields = z.object({
 });
 
 export type GoalActionState = { error?: string; success?: boolean };
+export type DeleteGoalState = { error?: string };
 
 function parseGoal(formData: FormData) {
   return goalFields.safeParse({
@@ -77,6 +78,16 @@ export async function setGoalArchived(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("reading_goals").update({ archived_at: parsed.data.archived === "true" ? new Date().toISOString() : null }).eq("id", parsed.data.id);
   refreshGoals();
+}
+
+export async function deleteGoal(_: DeleteGoalState, formData: FormData): Promise<DeleteGoalState> {
+  const id = z.string().uuid().safeParse(formData.get("id"));
+  if (!id.success) return { error: "That goal could not be found." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("reading_goals").delete().eq("id", id.data);
+  if (error) return { error: error.message };
+  refreshGoals();
+  return {};
 }
 
 export async function addBookToGoal(formData: FormData) {

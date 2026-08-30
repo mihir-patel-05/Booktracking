@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Archive, RotateCcw, X } from "lucide-react";
 import { PageHeading } from "@/components/app/page-heading";
 import { Meter } from "@/components/app/register";
-import { GoalComposer, GoalEditForm } from "@/components/goals/goal-forms";
+import { DeleteGoalButton, GoalComposer, GoalEditForm } from "@/components/goals/goal-forms";
 import { localDate } from "@/lib/dates";
 import { goalAvailability, goalPercent, goalProgress, goalWindow } from "@/lib/goals";
 import { createClient } from "@/lib/supabase/server";
@@ -57,11 +57,14 @@ export default async function GoalsPage() {
                       <p className="font-display text-[18px]">{goal.name}</p>
                       <p className="tnum text-xs text-muted">{goal.target_books} {goal.target_books === 1 ? "book" : "books"}</p>
                     </div>
-                    <form action={setGoalArchived}>
-                      <input name="id" type="hidden" value={goal.id} />
-                      <input name="archived" type="hidden" value="false" />
-                      <button className="btn btn-ghost text-xs" type="submit"><RotateCcw size={13} strokeWidth={1.5} />Restore</button>
-                    </form>
+                    <div className="flex items-center gap-1">
+                      <form action={setGoalArchived}>
+                        <input name="id" type="hidden" value={goal.id} />
+                        <input name="archived" type="hidden" value="false" />
+                        <button className="btn btn-ghost text-xs" type="submit"><RotateCcw size={13} strokeWidth={1.5} />Restore</button>
+                      </form>
+                      <DeleteGoalButton goalId={goal.id} goalName={goal.name} label="Delete" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -116,11 +119,14 @@ function GoalCard({ goal, memberships, completedBooks, today }: { goal: Goal; me
           <h2 className="mt-2 font-display text-[27px] leading-tight">{goal.name}</h2>
           <p className="tnum mt-1 text-[12px] text-muted">{period}</p>
         </div>
-        <form action={setGoalArchived}>
-          <input name="id" type="hidden" value={goal.id} />
-          <input name="archived" type="hidden" value="true" />
-          <button aria-label={`Archive ${goal.name}`} className="btn btn-ghost text-muted" type="submit"><Archive size={15} strokeWidth={1.5} /></button>
-        </form>
+        <div className="flex items-center">
+          <form action={setGoalArchived}>
+            <input name="id" type="hidden" value={goal.id} />
+            <input name="archived" type="hidden" value="true" />
+            <button aria-label={`Archive ${goal.name}`} className="btn btn-ghost text-muted" type="submit"><Archive size={15} strokeWidth={1.5} /></button>
+          </form>
+          <DeleteGoalButton goalId={goal.id} goalName={goal.name} />
+        </div>
       </div>
 
       <div className="mt-5">
