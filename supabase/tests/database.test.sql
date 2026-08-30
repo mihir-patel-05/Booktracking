@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(20);
 
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data)
 values
@@ -44,9 +44,29 @@ select throws_ok(
   'new row violates row-level security policy for table "books"',
   'ownership cannot be reassigned'
 );
+select lives_ok(
+  $$insert into public.reading_goals (id, name, target_books, cadence, starts_on, ends_on) values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Twenty in 2026', 20, 'overall', '2026-01-01', '2026-12-31')$$,
+  'an authenticated user can set a reading goal'
+);
+select lives_ok(
+  $$insert into public.reading_goal_books (goal_id, book_id, completed_on) values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-08-20')$$,
+  'the owner can enter their volume against their goal'
+);
+select is(
+  (select count(*) from public.reading_goal_books where completed_on between '2026-01-01' and '2026-12-31'),
+  1::bigint,
+  'goal progress is measurable by the local completion date'
+);
+select throws_ok(
+  $$insert into public.reading_goal_books (goal_id, book_id, completed_on) values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '2026-08-21')$$,
+  '23505',
+  'duplicate key value violates unique constraint "reading_goal_books_pkey"',
+  'a volume counts against the same goal only once'
+);
 
 select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', true);
 select is((select count(*) from public.books), 0::bigint, 'another user cannot read the owner book');
+select is((select count(*) from public.reading_goals), 0::bigint, 'another user cannot read the owner goals');
 select throws_ok(
   $$insert into public.session_notes (book_id, title) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Cross-user note')$$,
   '23503',
@@ -59,9 +79,18 @@ select throws_ok(
   'insert or update on table "reading_plans" violates foreign key constraint "reading_plans_book_owner_fk"',
   'a plan cannot be laid against a volume owned by another reader'
 );
+insert into public.books (id, title, author, total_pages)
+values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Second Reader Book', 'Another Author', 240);
+select throws_ok(
+  $$insert into public.reading_goal_books (goal_id, book_id, completed_on) values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '2026-08-21')$$,
+  '23503',
+  'insert or update on table "reading_goal_books" violates foreign key constraint "reading_goal_books_goal_owner_fk"',
+  'a volume cannot be entered against another reader goal'
+);
 
 set local role anon;
 select throws_ok($$select count(*) from public.books$$, '42501', 'permission denied for table books', 'anonymous table reads are revoked');
+select throws_ok($$select count(*) from public.reading_goals$$, '42501', 'permission denied for table reading_goals', 'anonymous goal reads are revoked');
 select throws_ok(
   $$select * from public.finalize_reading_session('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 60)$$,
   '42501',

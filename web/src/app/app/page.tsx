@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Timer } from "lucide-react";
+import { Target, Timer } from "lucide-react";
 import { PageHeading } from "@/components/app/page-heading";
 import { Attendance, Figure, FigureBand, Meter, SectionHeading } from "@/components/app/register";
 import { dateOffset, localDate } from "@/lib/dates";
+import { goalAvailability, goalPercent, goalProgress, goalWindow } from "@/lib/goals";
 import { percentRead, roman } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,7 +17,7 @@ export default async function HomePage() {
   const monthStart = `${today.slice(0, 7)}-01`;
   const yearStart = `${today.slice(0, 4)}-01-01`;
 
-  const [{ data: books }, { data: stats }, { data: monthSessions }, { data: finished }, { data: quotes }, { data: notes }, { data: plans }] = await Promise.all([
+  const [{ data: books }, { data: stats }, { data: monthSessions }, { data: finished }, { data: quotes }, { data: notes }, { data: plans }, { data: goals }, { data: goalBooks }] = await Promise.all([
     supabase.from("books").select("id,title,author,current_page,total_pages").eq("status", "Currently Reading").order("updated_at", { ascending: false }).limit(4),
     supabase.from("user_stats").select("current_streak,total_xp,total_seconds").maybeSingle(),
     supabase.from("reading_sessions").select("book_id,session_local_date,duration_seconds").gte("session_local_date", monthStart).lte("session_local_date", today),
@@ -24,6 +25,8 @@ export default async function HomePage() {
     supabase.from("quotes").select("id,text,books(title)").order("updated_at", { ascending: false }).limit(20),
     supabase.from("session_notes").select("id,title,chapter_reference,books(title)").order("updated_at", { ascending: false }).limit(3),
     supabase.from("reading_plans").select("id,book_id,target_minutes,target_pages,books(title)").eq("planned_date", today).order("created_at", { ascending: true }),
+    supabase.from("reading_goals").select("id,name,target_books,cadence,starts_on,ends_on").is("archived_at", null).order("created_at", { ascending: false }),
+    supabase.from("reading_goal_books").select("goal_id,completed_on"),
   ]);
 
   const minutesByDay = new Map<string, number>();
@@ -47,6 +50,11 @@ export default async function HomePage() {
   const spines = (finished ?? []).map((book) => book.total_pages || 0);
   const tallest = Math.max(1, ...spines);
   const quote = quotes?.length ? quotes[Math.floor(Math.random() * quotes.length)] : undefined;
+  const featuredGoal = goals?.find((goal) => goalAvailability(goal, today) === "active") ?? goals?.[0];
+  const featuredWindow = featuredGoal ? goalWindow(featuredGoal, today) : null;
+  const featuredProgress = featuredGoal && featuredWindow
+    ? goalProgress((goalBooks ?? []).filter((entry) => entry.goal_id === featuredGoal.id).map((entry) => entry.completed_on), featuredWindow)
+    : 0;
 
   const headline = readToday
     ? `${readToday} minutes read, and the evening still open.`
@@ -148,6 +156,27 @@ export default async function HomePage() {
           </section>
 
           <div className="rule" />
+
+          <section>
+            <div className="mb-3.5 flex items-baseline justify-between gap-4">
+              <p className="eyebrow eyebrow-muted">Reading goal</p>
+              <Link className="text-xs text-gold-text" href="/app/goals">All goals →</Link>
+            </div>
+            {featuredGoal ? (
+              <Link className="block border-y border-line py-4" href="/app/goals">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-display text-[20px]">{featuredGoal.name}</p>
+                    <p className="tnum mt-1 text-xs text-muted">{featuredProgress} of {featuredGoal.target_books} {featuredGoal.cadence === "monthly" ? "this month" : "finished"}</p>
+                  </div>
+                  <Target className="mt-1 text-gold-text" size={18} strokeWidth={1.5} />
+                </div>
+                <div className="mt-3"><Meter value={goalPercent(featuredProgress, featuredGoal.target_books)} /></div>
+              </Link>
+            ) : (
+              <p className="text-sm text-muted">No finish line set. <Link className="text-gold-text" href="/app/goals">Set a goal →</Link></p>
+            )}
+          </section>
 
           <section>
             <p className="eyebrow eyebrow-muted mb-3.5">Marginalia, this week</p>
