@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(22);
 
 insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data)
 values
@@ -86,6 +86,17 @@ select throws_ok(
   '23503',
   'insert or update on table "reading_goal_books" violates foreign key constraint "reading_goal_books_goal_owner_fk"',
   'a volume cannot be entered against another reader goal'
+);
+
+select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
+select lives_ok(
+  $$delete from public.reading_goals where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'$$,
+  'the owner can permanently delete their goal'
+);
+select is(
+  (select count(*) from public.reading_goal_books where goal_id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+  0::bigint,
+  'deleting a goal removes its goal membership rows'
 );
 
 set local role anon;
