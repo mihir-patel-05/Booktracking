@@ -12,10 +12,12 @@ const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", y
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: book }, { data: sessions }, { data: notes }] = await Promise.all([
+  const [{ data: book }, { data: sessions }, { data: notes }, { data: goals }, { data: goalMemberships }] = await Promise.all([
     supabase.from("books").select("id,title,author,current_page,total_pages,status,date_added").eq("id", id).maybeSingle(),
     supabase.from("reading_sessions").select("id,started_at,duration_seconds,xp_earned,mood_tags").eq("book_id", id).order("started_at", { ascending: false }).limit(60),
     supabase.from("session_notes").select("id,title,chapter_reference,updated_at").eq("book_id", id).order("updated_at", { ascending: false }).limit(4),
+    supabase.from("reading_goals").select("id,name,target_books,cadence").is("archived_at", null).order("created_at", { ascending: false }),
+    supabase.from("reading_goal_books").select("goal_id").eq("book_id", id),
   ]);
   if (!book) notFound();
 
@@ -67,7 +69,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="mt-9 border-t border-line pt-7">
-            <ProgressForm book={book} />
+            <ProgressForm book={book} goalIds={(goalMemberships ?? []).map((entry) => entry.goal_id)} goals={goals ?? []} />
           </div>
 
           <div className="mt-11">
